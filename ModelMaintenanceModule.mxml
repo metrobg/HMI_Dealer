@@ -1,0 +1,276 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Module xmlns:mx="http://www.adobe.com/2006/mxml" layout="absolute"  xmlns:ns1="Panels.*"
+	 creationComplete="init()">
+	 
+	 <mx:Script>
+	 	<![CDATA[
+	 		
+// MaintainCodes.mxml
+
+
+	import mx.collections.ArrayCollection;
+	import mx.events.*;
+	import mx.controls.Alert;
+	import com.metrobg.Icons.Images;
+	import com.metrobg.Classes.NumberUtilities;
+	import mx.rpc.http.HTTPService;
+	
+	 [Bindable]
+     public var myAC:ArrayCollection = new ArrayCollection;
+     
+     [Bindable]
+     public var mode:String = 'update';
+     
+     [Bindable] private var random:Number;
+     
+     private var newKey:Number;
+     
+     private var activeRecord:Number;
+     private var returnCode:Number;
+     
+
+private function init():void {
+	 this.moveToFront();
+}    
+        
+private function getResultOk(r:Number,event:Event):void {
+		switch(r)
+		{
+			case 1:
+			   myAC = getModels.lastResult.models.model;
+			   resultGrid.dataProvider = myAC;           		
+               break;
+			case 2:			
+				returnCode = updateModel.lastResult.root.status; 
+			    if(Number(returnCode) == 2) {
+			    	Alert.show("Problem updating Record", "Error", 3, this, null,Images.WarningIcon);
+			    		    	 
+		         } 	else {
+		         	currentState = '';
+		         	updateGrid();
+		         }	 	  
+			   break;
+			case 3:
+			  returnCode = addModel.lastResult.root.status; 
+			    if(Number(returnCode) == 2) {
+			    	Alert.show("Problem adding record","Error");
+			    				    				         	    			    	 
+		         } else {
+		         	/*  var itemObj:Object = new Object; 	
+			    	itemObj = {id:addModel.lastResult.root.id,
+			                   code:addModel.lastResult.root.code,
+			                   description:addModel.lastResult.root.description,
+			                   price:addModel.lastResult.root.price} */
+			        //addItemToGrid(itemObj);
+			        addItemToGrid(addModel.lastResult.root.model); 
+			        Alert.show("Record Added", "Success", Alert.OK, this, null,Images.OKIcon);
+			        currentState = '';	
+			        
+		         } 
+		         break;
+		     case 4:
+		           returnCode = deleteModel.lastResult.root.status;
+			         if(Number(returnCode) == 2) {
+			         	Alert.show("Problem deleting Record", "Error", Alert.OK, this, null,Images.WarningIcon);
+			         
+			         } else {
+			            Alert.show("Record Deleted","Success", Alert.OK, this, null,Images.OKIcon);
+			         	removeItemFromGrid(activeRecord);
+			         	currentState = '';
+			         	
+		         }
+		         break;
+		     case 999:
+		         Alert.show("Unknown Error","Attention", Alert.OK, this, null,Images.StopIcon);
+		         break;  
+			}
+		} 
+		
+private function gridItemSelected(event:ListEvent):void{
+			     activeRecord  = event.rowIndex -1;
+				 mode = 'update';
+				 delete_btn.enabled = true;										
+		}  
+		 
+private function dataGridCurrencyFormat(item:Object, column:Object):String
+        {
+            return cf.format(item[column.dataField]);
+        }
+        
+private function buttonHandler(value:String):void{
+	if(value == 'delete')
+	    mode = 'delete';
+	switch(mode) 
+	   {
+		case "update":
+			updateModel.send();
+			currentState = '';
+			break;
+		case 'add':
+		    
+		    if(description_fld.text != ''){
+		    	addModel.send();
+		    } else {
+		    Alert.show("Blank fields not allowed", "Error", 0, this, null,Images.StopIcon);	
+		    }
+		    
+		    break;
+		case 'delete':
+		     deleteCode();
+		     break;	    
+	   }	 	
+}
+
+private function alertClickHandler(event:CloseEvent):void {
+	             if (event.detail==Alert.YES) {
+                     deleteModel.send();                   
+                  }  
+}
+
+
+private function addRecord():void {
+			     description_fld.text = '';			     
+			     mode = 'add';
+			     delete_btn.enabled = false;
+			     
+			}
+			
+private function addItemToGrid(obj:Object):void {
+			     myAC.addItemAt(obj,0);
+			     resultGrid.dataProvider = myAC;
+			     myAC.refresh();		
+	} 	
+		
+private function removeItemFromGrid(position:Number):void {
+			     myAC.removeItemAt(position);
+			     resultGrid.dataProvider = myAC;
+			     myAC.refresh();
+		
+	} 	
+
+private function deleteCode():void {
+	             mode = 'delete';
+	      	  //   Alert.show("Delete Code " + description_fld.text.toUpperCase(), "Really Delete", 3, this, alertClickHandler);
+                 Alert.show("Delete Code " + description_fld.text.toUpperCase(), "Really Delete", 3, this, alertClickHandler,Images.WarningIcon);
+}       
+                  
+private function updateGrid():void {
+		         if ( this.resultGrid.selectedItem !== null) {
+			        myAC.setItemAt({
+			        id:id_fld.text,
+			        description: description_fld.text},
+			        activeRecord);
+			        myAC.refresh();
+		}
+	} 
+private function closeThisModule():void {
+	parentApplication.removeModule(this.owner.name);
+}	
+private function moveToFront():void
+{
+   // move the shape to the front by moving it to the front-most
+   // index (which is always numChildren - 1)
+	if (this)
+		if (this.owner)
+			if (this.owner.name)
+				if (parentApplication)
+			   		parentApplication.setChildIndex(parentApplication.getChildByName(this.owner.name), 
+						parentApplication.numChildren - 1);
+}
+	 	]]>
+	 </mx:Script>
+	<!--<mx:Script source="ModelMaintenance.as" /> -->
+<mx:HTTPService  id="getModels"
+    url="http://www.heritagemfg.com/console/flex/queries/getModels.cfm"
+    useProxy="false"  showBusyCursor="true"
+    result="getResultOk(1,event)"> 
+    <mx:request>
+    <random>{parentDocument.makeRandom()}</random> 
+    </mx:request>
+</mx:HTTPService>  
+
+   <mx:HTTPService id="addModel"     
+    url="http://www.heritagemfg.com/console/flex/queries/updateModels.cfm"
+    useProxy="false"  showBusyCursor="true"
+    result="getResultOk(3,event)">
+    <mx:request>
+    	<mode>{mode}</mode> 
+    	<name>{description_fld.text}</name>
+    	<random>{parentDocument.makeRandom()}</random> 	  	
+    </mx:request>
+    </mx:HTTPService>
+    
+    <mx:HTTPService id="deleteModel"     
+    url="http://www.heritagemfg.com/console/flex/queries/updateModels.cfm"
+    useProxy="false"  showBusyCursor="true"
+    result="getResultOk(4,event)"
+    fault="getResultOk(999,event)">
+    <mx:request>
+    	<mode>{mode}</mode>  	
+    	<id>{resultGrid.selectedItem.id}</id> 
+    	<random>{parentDocument.makeRandom()}</random>	  	
+    </mx:request>
+    </mx:HTTPService>
+     
+    <mx:HTTPService id="updateModel"     
+    url="http://www.heritagemfg.com/console/flex/queries/updateModels.cfm"
+    useProxy="false"  showBusyCursor="true"
+    result="getResultOk(2,event)"
+    fault="getResultOk(999,event)">
+    <mx:request>
+    	<mode>{mode}</mode>
+    	<id>{resultGrid.selectedItem.id}</id>  	
+    	<name>{description_fld.text}</name>   	 
+    	<random>{parentDocument.makeRandom()}</random>  	  	
+    </mx:request>
+    </mx:HTTPService>
+    
+<mx:NumberFormatter precision="2" id="nf"/>
+<mx:CurrencyFormatter id="cf" precision="2"/> 
+
+<ns1:SuperPanel x="0" y="0" width="350" height="600" layout="absolute" title="Model Maintenance"
+		showControls="true" enableResize="false" exitFunction="parentApplication.removeModule" exitFunctionValue="{this.owner.name}" 
+		 click="moveToFront();" id="superpanel1">					
+		  <!--M A I N   D A T A   V I E W -->
+		 
+		  	
+	<mx:Panel width="95%" height="390" layout="absolute" title="Model Listing" id="panel1" 
+		 defaultButton="{load_btn}" left="10" top="10"> 
+		<mx:DataGrid width="90%" id="resultGrid" itemClick="gridItemSelected(event);"
+								   visible="true" height="90%" left="10" top="10">
+								<mx:columns>
+									<mx:DataGridColumn headerText="Model" dataField="description" width="125"/>
+								</mx:columns>
+							</mx:DataGrid>
+		<mx:ControlBar id="controlbar2" horizontalAlign="center">
+		<mx:Button x="147" y="276" label="Load" id="load_btn" click="getModels.send()" icon="{Images.listIcon}"
+			       useHandCursor="true" buttonMode="true" toolTip="Click here to List All Models"/>
+		<mx:Button label="Close" icon="{Images.closeIcon}" id="close_btn" click="{this.closeThisModule()}"
+			       toolTip="Click here to close this window" useHandCursor="true" buttonMode="true" fontWeight="bold"/>
+		</mx:ControlBar>
+	</mx:Panel>
+	
+	      <!--A D D  /  E D I T   P A N E L -->
+	<mx:Panel width="95%" height="144" layout="absolute"  verticalScrollPolicy="off" defaultButton="{save_btn}"
+		title="Update Model " id="modelMaint" visible="true" horizontalScrollPolicy="off" horizontalAlign="center" left="10" top="416">
+			 <mx:HBox width="100%" height="100%" horizontalAlign="center" verticalAlign="middle">
+			 <mx:TextInput id="description_fld" maxChars="20" text="{resultGrid.selectedItem.description}" width="164" x="21" y="10"/>	 
+			<mx:Text x="62" y="251" text="{resultGrid.selectedItem.id}" width="10" id="id_fld" visible="false"/>
+			 </mx:HBox>
+			 
+       <mx:ControlBar id="controlbar1" horizontalAlign="center">
+		<mx:Button label="Save" id="save_btn" icon="{Images.saveIcon}" click="buttonHandler('save')" 
+			       toolTip="Click here to Save this Record"  useHandCursor="true" buttonMode="true" labelPlacement="right" width="68" fontSize="9" fontWeight="bold"/>
+		<mx:Button label="Add" id="add_btn" toolTip="Click here to add a new Model" click="addRecord();"
+			       useHandCursor="true" buttonMode="true" icon="{Images.addIcon}" labelPlacement="right" width="68" fontSize="9" fontWeight="bold"/>
+		<mx:Button label="Delete" id="delete_btn" icon="{Images.removeIcon}"
+			       click="buttonHandler('delete')" toolTip="Click here to Delete this Record" useHandCursor="true" buttonMode="true" labelPlacement="right" width="79" fontSize="9" fontWeight="bold"/>	
+	                
+		</mx:ControlBar>
+	</mx:Panel>  
+		 
+	 </ns1:SuperPanel> 
+
+
+
+</mx:Module>

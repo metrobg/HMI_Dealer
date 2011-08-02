@@ -1,0 +1,513 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:TitleWindow xmlns:mx="http://www.adobe.com/2006/mxml" creationComplete="init();" title="Report Runner" xmlns:local="*"
+                close="PopUpManager.removePopUp(this);" width="307" height="449" xmlns:ns1="components.*"
+                xmlns:ns2="com.metrobg.Components.*">
+    <mx:Script>
+        <![CDATA[
+            import mx.formatters.DateFormatter;
+            import mx.rpc.events.ResultEvent;
+            import mx.rpc.events.FaultEvent;
+            import mx.controls.Alert;
+            import mx.collections.ArrayCollection;
+            import com.metrobg.Icons.Images;
+            import mx.managers.CursorManager;
+            /*
+               1.1.1		6/19/2009	Fixed problem when selecting single category, no output was produced.
+               added single quote to category entries in the comboBox
+               1.1.2		6/20/2009	Created multi select combo box in order to provide the use with the ability
+               to select multiple categories when running the reports
+               1.1.3		7/5/2009 Added isValidDate function.
+
+               1.1.5		12/5/2010 Added reportion 4, Dealer Report by State
+               1.1.6	12/7/2010 Now only necessary to pass variables used by the report.
+               1.1.8	12/14/2010 added report option 5. so that the warranty registration report
+               could be run based on either the date the record was submitted or the
+               date indicated as the purchase date.
+               1.1.9	2/4/2011 sales tax report not running because the tax flag was not being sent
+               to the ReportRunner
+               1.2.5 Added canvas 6 which allows sort order selection for the agent call reports
+               1.2.6 Added canvas 7 which contains only the sort options previously contained in canvas 6
+             */
+            import mx.events.CloseEvent;
+            import mx.managers.PopUpManager;
+            import mx.events.CalendarLayoutChangeEvent;
+            import ascb.util.DateFormat;
+            import mx.rpc.remoting.RemoteObject;
+
+            [Bindable]
+            public var reportTemplate:String;
+
+            [Bindable]
+            public var reportName:String;
+
+            [Bindable]
+            public var canvas:String = "0";
+
+            private var catAC:ArrayCollection;
+
+            public var Options:URLVariables;
+
+            private var url:String;
+
+            [Bindable]
+            private var TAX:String = "0";
+
+            private var df:DateFormat = new DateFormat("d-M-Y")
+
+            private var version:String = "ver 1.2.6";
+
+            private var message:String;
+
+            public var acReps:ArrayCollection;
+
+            private function init():void
+            {
+                url = parentApplication.ReportRunnerURL;
+                var today:Date = new Date;
+                message = "This report does not require any options ";
+                message += "other than the output device (screen or printer). ";
+                message += "Please click run to view your report";
+                to_df.selectedDate = today;
+                from_df.selectedDate = today;
+                tl.text = message;
+                Options = new URLVariables();
+                title += " " + version;
+                this.webService.loadCategories();
+                msCategory_cb.labelField = "Description";
+                acReps = new ArrayCollection();
+            }
+
+            public function enableCanvas(value:String):void
+            {
+                this.canvas = value;
+                var vCanvas:String = "Canvas" + value;
+                switch (Number(value))
+                {
+                    case 0:
+                        break;
+                    case 1:
+                        this[vCanvas].visible = true;
+                        break;
+                    case 2:
+                        this[vCanvas].visible = true;
+                        break
+                    case 3:
+                        this[vCanvas].visible = true;
+                        break;
+                    case 4:
+                        this[vCanvas].visible = true;
+                        break;
+                    case 5:
+                        currentState = "five";
+                        break;
+                    case 6:
+                        loadAgencies();
+                        this[vCanvas].visible = true;
+                        break;
+                    case 7:
+                        this[vCanvas].visible = true;
+                        break;
+                }
+            }
+
+            public function allOff():void
+            {
+                Canvas1.visible = false;
+                Canvas2.visible = false
+                Canvas3.visible = false;
+                Canvas4.visible = false;
+                Canvas5.visible = false;
+                Canvas6.visible = false;
+                Canvas7.visible = false;
+            }
+
+            private function TaxoptionChanged(event:Event):void
+            {
+                TAX = event.currentTarget.selectedValue;
+            }
+
+            private function setOptions(value:String):void
+            {
+                tl.text = '';
+                var fdate:Date = new Date(from_df.text);
+                var tdate:Date = new Date(to_df.text);
+                var df:DateFormat = new DateFormat("d-M-Y");
+                var strCategories:Array = new Array();
+                Options.output = outputFormat.selectedValue;
+                for (var i:int = 0; i < msCategory_cb.selectedItems.length; i++)
+                {
+                    if (Number(msCategory_cb.selectedItems[i].ID) > 0)
+                        strCategories.push(msCategory_cb.selectedItems[i].ID);
+                }
+                trace("cat " + strCategories.toString());
+                switch (value)
+                {
+                    case "0":
+                        Options.FROM = df.format(fdate).toUpperCase();
+                        Options.TO = df.format(tdate).toUpperCase();
+                        Options.template = "HMI/" + reportTemplate;
+                        Options.ORDERBY = OrderBy_cb.selectedItem.data;
+                        Options.DIR = direction.selectedValue;
+                        Options.STATE = cbxState.selectedItem.DATA;
+                        Options.CATEGORY = strCategories.toString();
+                        Options.TAX = TAX;
+                        break;
+                    case "1":
+                        Options.FROM = df.format(fdate).toUpperCase();
+                        Options.TO = df.format(tdate).toUpperCase();
+                        Options.template = "HMI/" + reportTemplate;
+                        Options.ORDERBY = OrderBy_cb.selectedItem.data;
+                        Options.STATE = cbxState.selectedItem.DATA;
+                        Options.DIR = direction.selectedValue;
+                        Options.CATEGORY = strCategories.toString();
+                        Options.TAX = TAX;
+                        break;
+                    case "3":
+                        Options.FROM = df.format(fdate).toUpperCase();
+                        Options.TO = df.format(tdate).toUpperCase();
+                        Options.template = "HMI/" + reportTemplate;
+                        Options.ORDERBY = OrderBy_cb.selectedItem.data;
+                        Options.TAX = TAX;
+                        break;
+                    case "4":
+                        Options.template = "HMI/" + reportTemplate;
+                        Options.FROM = df.format(fdate).toUpperCase();
+                        Options.TO = df.format(tdate).toUpperCase();
+                        Options.STATE = cbxState.selectedItem.DATA;
+                        Options.ORDERBY = StateSortGroup.selectedValue;
+                        break;
+                    case "5":
+                        Options.template = "HMI/" + reportTemplate;
+                        Options.FROM = df.format(fdate).toUpperCase();
+                        Options.TO = df.format(tdate).toUpperCase();
+                        Options.STATE = cbxState.selectedItem.DATA;
+                        Options.ORDERBY = StateSortGroup.selectedValue;
+                        Options.FIELD = dateField.selectedValue;
+                        break;
+                    case "6":
+                    case "67":
+                        Options.template = "HMI/" + reportTemplate;
+                        Options.FROM = df.format(fdate).toUpperCase();
+                        Options.TO = df.format(tdate).toUpperCase();
+                        Options.SALESGROUP = cbxAgency.selectedItem.AGENCY_ID;
+                        Options.SALESREP = cbxRep.selectedItem.DATA;
+                        Options.ORDERBY = "," + getSortFields();
+                        break;
+                    case "99":
+                        Options.FROM = df.format(fdate).toUpperCase();
+                        Options.TO = df.format(tdate).toUpperCase();
+                        Options.template = "HMI/" + reportTemplate;
+                        Options.ORDERBY = OrderBy_cb.selectedItem.data;
+                        Options.STATE = cbxState.selectedItem.DATA;
+                        Options.DIR = direction.selectedValue;
+                        Options.CATEGORY = strCategories.toString();
+                        Options.TAX = TAX;
+                        break;
+                }
+            }
+
+            private function getSortFields():String
+            {
+                var sortObj:Object = new Object();
+                var arrSortOrder:Array = new Array();
+                var retVar:String;
+                sortObj.name = nsDealer.value + "_NAME";
+                sortObj.visit_date = nsDate.value + "+VISIT_DATE";
+                sortObj.state = nsState.value + "_STATE";
+                arrSortOrder.push(sortObj.name);
+                arrSortOrder.push(sortObj.visit_date);
+                arrSortOrder.push(sortObj.state);
+                arrSortOrder.sort();
+                for (var i:int = 0; i < arrSortOrder.length; i++)
+                {
+                    arrSortOrder[i] = String(arrSortOrder[i]).substr(2);
+                }
+                return arrSortOrder.toString();
+            }
+
+            private function loadAgencies():void
+            {
+                var csg:RemoteObject = new RemoteObject();
+                csg.destination = "ColdFusion";
+                csg.source = "com.Heritage.AGENCYGateway";
+                csg.addEventListener("result", onServiceDataReady);
+                csg.addEventListener("fault", onServiceFault);
+                csg.getAllAgency();
+            }
+
+            private function loadReps():void
+            {
+                if (cbxAgency.selectedIndex == 0)
+                {
+                    acReps = new ArrayCollection();
+                    acReps.addItem({ DATA: '%', LABEL: 'All' });
+                    cbxRep.dataProvider = acReps;
+                    return;
+                }
+                var csg:RemoteObject = new RemoteObject();
+                csg.destination = "ColdFusion";
+                csg.source = "com.Heritage.SALESREPGateway";
+                csg.addEventListener("result", onServiceDataReady);
+                csg.addEventListener("fault", onServiceFault);
+                csg.getRepByAgency(cbxAgency.value);
+            }
+
+            public function onServiceDataReady(event:ResultEvent):void
+            {
+                var act:Object = event.token;
+                switch (act.message.operation)
+                {
+                    case "getAllAgency":
+                        var acAgency:ArrayCollection;
+                        var agencyList:Array = new Array();
+                        acAgency = new ArrayCollection(act.result as Array);
+                        for (var i:int = 0; i < acAgency.length; i++)
+                        {
+                            agencyList.push(acAgency[i].AGENCY_ID);
+                        }
+                        acAgency.addItemAt({ AGENCY_ID: agencyList.toString(), AGENCY_SHORT_NAME: "All" }, 0);
+                        cbxAgency.labelField = "AGENCY_SHORT_NAME";
+                        cbxAgency.dataField = "AGENCY_ID";
+                        cbxAgency.dataProvider = acAgency;
+                        acAgency.refresh();
+                        var tac:ArrayCollection = new ArrayCollection();
+                        tac.addItemAt({ DATA: '%', LABEL: 'All' }, 0);
+                        cbxRep.dataProvider = tac;
+                        cbxRep.labelField = "LABEL";
+                        cbxRep.dataField = "DATA";
+                        break;
+                    case "getRepByAgency":
+                        // var tac:ArrayCollection = act.result;
+                        acReps = new ArrayCollection();
+                        acReps = act.result;
+                        acReps.addItemAt({ DATA: '%', LABEL: 'All' }, 0);
+                        cbxRep.dataProvider = acReps;
+                        acReps.refresh();
+                        cbxRep.labelField = "LABEL";
+                        cbxRep.dataField = "DATA";
+                        break;
+                }
+            }
+
+            private function onServiceFault(event:FaultEvent):void
+            {
+                // Or clock-cursor will spin forever (:
+                CursorManager.removeBusyCursor();
+                var act:Object = event.token;
+                // Do your own error processing with event.fault.faultstring, etc...
+                Alert.show(event.fault.faultString, 'Error');
+            }
+
+            private function orderByChanged(event:CloseEvent):void
+            {
+                Options.ORDERBY = OrderBy_cb.selectedItem.data;
+            }
+
+            private function runReport():void
+            {
+                if (isValidDate())
+                {
+                    setOptions(this.canvas);
+                    var request:URLRequest = new URLRequest(url);
+                    request.method = "POST";
+                    request.data = Options;
+                    trace("url " + request.data.toString());
+                    navigateToURL(request);
+                }
+                else
+                {
+                    Alert.show("Please correct date entries. Report from date must be eariler than Report to date", "Correct Errors");
+                }
+            }
+
+            private function processDateFields(eventObj:CalendarLayoutChangeEvent, id:String):void
+            {
+                var id:String = id;
+                run_btn.enabled = true;
+                // Make sure selectedDate is not null.
+                if (eventObj.currentTarget.selectedDate == null)
+                {
+                    return
+                }
+            } // end of function
+
+            public function isValidDate():Boolean
+            {
+                var fromdte:Date;
+                var todte:Date;
+                var offset:Number;
+                fromdte = new Date(from_df.text);
+                todte = new Date(to_df.text);
+                offset = fromdte.valueOf() - todte.valueOf();
+                if (offset <= 0)
+                { // from date is earlier than the to date
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+
+            private function categoriesLoaded(event:ResultEvent):void
+            {
+                catAC = event.result as ArrayCollection;
+                catAC.addItemAt({ ID: 0, DESCRIPTION: "Select Categories" }, 0);
+                msCategory_cb.dataProvider = catAC;
+                msCategory_cb.labelField = "DESCRIPTION";
+            }
+
+            private function categoriesFault(event:FaultEvent):void
+            {
+                Alert.show("problem loading Categories", "Halt");
+            }
+        ]]>
+    </mx:Script>
+    <mx:WebService id="webService" wsdl="http://heritagemfg.com/console/flex/queries/flash/HMI.cfc?wsdl">
+        <mx:operation name="loadCategories" resultFormat="object" result="categoriesLoaded(event)" fault="categoriesFault(event)" />
+    </mx:WebService>
+    <mx:ArrayCollection id="categoryAC">
+        <mx:Object data="" label="Select" />
+        <mx:Object data="'Leather'" label="Leather" />
+        <mx:Object data="'Grip'" label="Grips" />
+        <mx:Object data="'Parts'" label="Parts" />
+        <mx:Object data="'Accessories'" label="Accessories" />
+        <mx:Object data="'Other'" label="Other" />
+    </mx:ArrayCollection>
+    <mx:Panel height="397" layout="absolute" title="{reportName}" left="5"
+              right="5" top="10" width="100%" id="p1">
+        <mx:DateField x="95.5" y="30" id="from_df" change="processDateFields(event,'from_df')"
+                      yearNavigationEnabled="true" />
+        <mx:DateField x="95.5" y="60" id="to_df" change="processDateFields(event,'to_df')"
+                      yearNavigationEnabled="true" />
+        <mx:Label x="29.5" y="32" text="From" fontWeight="bold"
+                  width="58" textAlign="right" />
+        <mx:Label x="52.5" y="62" text="To" fontWeight="bold"
+                  width="35" textAlign="right" />
+        <mx:Label x="0" y="2" text="Select beginning and ending dates" textAlign="center"
+                  fontWeight="bold" fontSize="12" width="100%" height="26" />
+        <mx:Canvas height="165" id="Canvas1" visible="false" left="5"
+                   right="5" bottom="27">
+            <mx:ComboBox x="83" y="15" width="113" id="OrderBy_cb">
+                <mx:dataProvider>
+                    <mx:ArrayCollection>
+                        <mx:Object data="UNITS" label="Units" />
+                        <mx:Object data="TOTAL" label="Totals" />
+                        <mx:Object data="ITEMTYPE" label="Product Type" />
+                    </mx:ArrayCollection>
+                </mx:dataProvider>
+            </mx:ComboBox>
+            <mx:Label x="10" y="17" text="Order By" fontWeight="bold" />
+            <mx:Label x="38" y="100" text="Category" fontWeight="bold"
+                      width="170" textAlign="center" />
+            <mx:RadioButtonGroup id="direction" />
+            <mx:RadioButton x="22" y="50" label="Ascending" groupName="direction"
+                            fontWeight="bold" value="Asc" />
+            <mx:RadioButton x="110" y="50" label="Descending" groupName="direction"
+                            fontWeight="bold" value="Desc" selected="true" />
+            <mx:RadioButtonGroup id="report_type" />
+            <mx:RadioButton x="22" y="76" label="Detail" groupName="report_type"
+                            fontWeight="bold" />
+            <mx:RadioButton x="110" y="76" label="Summary" groupName="report_type"
+                            fontWeight="bold" />
+            <local:MSComboBox x="38" y="120" id="msCategory_cb" width="170"
+                              toolTip="Hold down the Ctl key while selecting to pick multiple categories" />
+        </mx:Canvas>
+        <mx:Canvas height="142" id="Canvas2" visible="false" left="5"
+                   right="5" bottom="5">
+            <mx:ComboBox x="83" y="15" width="113" id="combobox1">
+                <mx:dataProvider>
+                    <mx:ArrayCollection>
+                        <mx:Object data="00" label="Select" />
+                        <mx:Object data="E" label="Estimates Only" />
+                        <mx:Object data="O" label="Orders Only" />
+                        <mx:Object data="B" label="Both" />
+                    </mx:ArrayCollection>
+                </mx:dataProvider>
+            </mx:ComboBox>
+            <mx:Label x="10" y="17" text="Order Type" fontWeight="bold" />
+            <mx:RadioButtonGroup id="ro_type" />
+            <mx:RadioButton x="41" y="64" label="Orders By Ship Date" groupName="ro_type"
+                            fontWeight="bold" />
+            <mx:RadioButton x="41" y="90" label="Codes By Ship Date" groupName="ro_type"
+                            fontWeight="bold" />
+        </mx:Canvas>
+        <mx:Canvas height="142" id="Canvas3" visible="false" left="5"
+                   right="5" bottom="5">
+            <mx:RadioButtonGroup id="tax_type" itemClick="TaxoptionChanged(event)" />
+            <mx:RadioButton x="41" y="16" label="Taxable Orders Only" groupName="tax_type"
+                            fontWeight="bold" value="0" selected="true" toolTip="This option will only report those orders within the selected date range where the sales tax is greater than 0" />
+            <mx:RadioButton x="41" y="42" label="All Orders" groupName="tax_type"
+                            fontWeight="bold" value="-1" toolTip="This option will list all orders within the selected date range having a total greater than zero" />
+            <mx:CheckBox x="41" y="72" label="Include POP Orders" fontWeight="bold" />
+        </mx:Canvas>
+        <mx:Canvas height="165" id="Canvas4" visible="false" left="5"
+                   right="5" bottom="27">
+            <ns1:StateComboBox x="48" y="30" id="cbxState" />
+            <mx:Label x="48" y="10" text="Select the State" width="160"
+                      fontWeight="bold" textAlign="center" />
+            <mx:Label x="48" y="61" text="Sort By" width="160"
+                      fontWeight="bold" textAlign="center" />
+            <mx:RadioButtonGroup id="StateSortGroup" />
+            <mx:RadioButton x="72" y="85" label="City" groupName="StateSortGroup"
+                            selected="true" value="City,Zip" id="sbCity" fontWeight="bold" />
+            <mx:RadioButton x="138" y="85" label="Zip" groupName="StateSortGroup"
+                            value="Zip,City" id="sbZip" fontWeight="bold" />
+        </mx:Canvas>
+        <mx:Canvas height="165" id="Canvas5" visible="false" left="5"
+                   right="5" bottom="27">
+            <mx:RadioButtonGroup id="dateField" />
+            <mx:RadioButton y="38" label="Purchase Date" groupName="dateField" selected="true"
+                            value="PURCHASE_DATE" id="sbPD" fontWeight="bold" horizontalCenter="0" />
+            <mx:RadioButton y="60" label="Recorded Date" groupName="dateField" value="TS"
+                            id="sbTS" fontWeight="bold" horizontalCenter="0" />
+            <mx:Label y="11" text="Select Records Based On" width="209" textAlign="center"
+                      horizontalCenter="0" fontWeight="bold" />
+        </mx:Canvas>
+        <mx:Canvas height="97" id="Canvas6" visible="false" left="5"
+                   right="5" bottom="98" horizontalScrollPolicy="off">
+            <ns2:VAComboBox y="24" id="cbxAgency" change="loadReps()" maxWidth="229"
+                            horizontalCenter="0" />
+            <ns2:VAComboBox y="68" id="cbxRep" maxWidth="229" horizontalCenter="0" />
+            <mx:Label y="50" text="Select the Sales Rep" fontWeight="bold" textAlign="center"
+                      id="label0" left="10" right="10" />
+            <mx:Label x="1" y="4" text="Select the Sales Group" width="100%"
+                      fontWeight="bold" textAlign="center" id="label1" />
+        </mx:Canvas>
+        <mx:Canvas height="90" left="5" right="5" bottom="0"
+                   id="Canvas7" visible="false">
+            <mx:NumericStepper x="10" y="28" id="nsDealer" value="1"
+                               minimum="1" maximum="3" stepSize="1" />
+            <mx:NumericStepper x="10" y="57" id="nsDate" value="3"
+                               minimum="1" maximum="3" stepSize="1" />
+            <mx:NumericStepper x="137" y="28" id="nsState" value="2"
+                               minimum="1" maximum="3" stepSize="1" />
+            <mx:Label x="76" y="61" text="Call Date" width="67"
+                      fontWeight="bold" />
+            <mx:Label x="76" y="30" text="Dealer" width="67"
+                      fontWeight="bold" />
+            <mx:Label y="27" text="State" width="46" right="3"
+                      fontWeight="bold" />
+            <mx:Label x="0" y="2" text="Sort By" width="249"
+                      textAlign="center" fontWeight="bold" />
+        </mx:Canvas>
+        <mx:Canvas height="142" id="Canvas99" visible="false" left="5"
+                   right="5" bottom="5" horizontalScrollPolicy="off">
+            <mx:Text y="10" height="122" id="tl" enabled="false"
+                     left="10" right="10" />
+        </mx:Canvas>
+        <mx:HRule x="0" y="112" width="100%" />
+        <mx:HBox width="100%" height="20" y="89" verticalAlign="middle"
+                 horizontalAlign="center">
+            <mx:RadioButtonGroup id="outputFormat" />
+            <mx:Label text="Format" fontWeight="bold" width="60" />
+            <mx:RadioButton x="62.5" y="88" label="Excel" groupName="outputFormat"
+                            fontWeight="bold" value="XLS" />
+            <mx:RadioButton x="120.5" y="88" label="PDF" selected="true"
+                            groupName="outputFormat" fontWeight="bold" value="PDF" />
+        </mx:HBox>
+        <mx:ControlBar horizontalAlign="center">
+            <mx:Button label="Run" click="runReport()" id="run_btn" />
+        </mx:ControlBar>
+    </mx:Panel>
+</mx:TitleWindow>

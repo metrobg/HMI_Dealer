@@ -1,0 +1,117 @@
+<mx:Module xmlns:mx="http://www.adobe.com/2006/mxml" layout="absolute" creationComplete="init()"
+           xmlns:ns1="Panels.*" xmlns:ns3="com.ace.Input.*" xmlns:ns2="com.metrobg.Components.*">
+    <mx:Script source="callSheetModule.as" />
+    <mx:DateFormatter id="df" formatString="MM/DD/YYYY" />
+    <mx:WebService id="lcl" showBusyCursor="true" wsdl="http://www.heritagemfg.com/Services/HMI.cfc?wsdl">
+        <mx:operation name="loadAgencyCombo" resultFormat="object" result="fillComboBox_result(event);" fault="fillComboBox_fault(event);" />
+        <mx:operation name="loadPurchaseGroupCombo" resultFormat="object" result="fillComboBox_result(event);" fault="fillComboBox_fault(event);" />
+        <mx:operation name="loadSalesRepCombo" resultFormat="object" result="fillComboBox_result(event);" fault="fillComboBox_fault(event);" />
+        <mx:operation name="loadDealerAndRep" resultFormat="object" result="fillComboBox_result(event);" fault="fillComboBox_fault(event);" />
+        <mx:operation name="loadDealerByName" resultFormat="object" result="fillComboBox_result(event);" fault="fillComboBox_fault(event);" />
+    </mx:WebService>
+    <ns1:SuperPanel xmlns:mx="http://www.adobe.com/2006/mxml" width="648" height="477"
+                    title="Call Sheet Entry - {mode}" layout="absolute" showControls="true"
+                    enableResize="false" exitFunction="parentApplication.removeModule" exitFunctionValue="{this.owner.name}"
+                    click="moveToFront();" id="superpanel1">
+        <mx:TabNavigator creationPolicy="all" top="10" left="10"
+                         right="10" bottom="10" id="tn1">
+            <mx:Canvas width="100%" height="100%" label="Dealer Lookup" defaultButton="{btn_Find}">
+                <mx:DataGrid width="499" height="284" id="dgDealer"
+                             y="22" horizontalCenter="0" doubleClick="gridDoubleClickHandler(event)"
+                             doubleClickEnabled="true">
+                    <mx:columns>
+                        <mx:DataGridColumn headerText="Name" dataField="NAME" width="155" />
+                        <mx:DataGridColumn headerText="Address" dataField="ADDRESS" width="100" />
+                        <mx:DataGridColumn headerText="City" dataField="CITY" width="85" />
+                        <mx:DataGridColumn headerText="State" dataField="STATE" width="45" textAlign="center" />
+                    </mx:columns>
+                </mx:DataGrid>
+                <mx:TextInput x="305" y="346" id="search_fld" />
+                <mx:Button x="473" y="346" label="Find"
+                           id="btn_Find" click="lookupName(event)" />
+                <ns2:StateComboBox x="54" y="346" id="cbx_state"
+                                   close="lookupName(event)" toolTip="Click here to load Dealers from the selected state" />
+                <mx:Label text="Search by Name" fontWeight="bold" x="305"
+                          y="320" width="160" textAlign="center" />
+                <mx:Label text="Search byState" fontWeight="bold" x="54"
+                          y="320" width="160" textAlign="center" />
+            </mx:Canvas>
+            <mx:Canvas label="Call Sheet Entry" width="100%" height="100%"
+                       id="cnv_CallSheet" enabled="true">
+                <ns3:ValidatedComboBox y="36.5" id="SALESGROUP" width="176"
+                                       left="115" change="filterAgency()" />
+                <ns3:ValidatedComboBox y="67" id="SALESREP" width="176" left="115" />
+                <ns3:ValidatedDateField y="112" id="VISIT_DATE" left="115"
+                                        width="117" minDataChars="2" defaultValue="sysdate" />
+                <ns3:ValidatedComboBox y="142" id="PURCHASE_GROUP" width="176" left="115" />
+                <ns3:ValidatedComboBox y="168" width="90" id="STOCKING_DEALER" left="115" />
+                <ns3:ValidatedComboBox y="194" width="90" id="ORDER_TAKEN" left="115" />
+                <ns3:ValidatedDateField y="222" id="FOLLOWUP_DATE" left="115" width="117" />
+                <ns3:ValidatedTextArea x="300" y="221" width="296"
+                                       minDataChars="4" height="97" id="COMMENTS"
+                                       maxDataChars="2000" upper="true" />
+                <ns3:ValidatedComboBox y="271" width="90" id="DISPLAY_REVOLVERS" left="85" />
+                <ns3:ValidatedTextInput y="271" width="70" id="REVOLVERS_DISPLAYED"
+                                        right="315" maxDataChars="50" upper="true" />
+                <ns3:ValidatedComboBox y="297" width="90" id="DISPLAY_LEATHER" left="85" />
+                <ns3:ValidatedTextInput y="296" width="70" id="LEATHER_DISPLAYED"
+                                        right="315" maxDataChars="50" upper="true" />
+                <ns3:ValidatedComboBox y="323" width="90" id="DISPLAY_GRIP" left="85" />
+                <ns3:ValidatedTextInput y="323" width="70" id="GRIPS_DISPLAYED"
+                                        right="315" maxDataChars="50" upper="true" />
+                <ns3:ValidatedTextInput y="323" width="375" id="DEALER_ID"
+                                        right="10" visible="false" />
+                <mx:Label x="10" y="10" width="281"
+                          textAlign="center" id="lblDealer" fontWeight="bold"
+                          fontSize="12" />
+                <mx:Label x="343" y="8" text="Call History"
+                          width="256" textAlign="center" fontWeight="bold"
+                          fontSize="12" />
+                <mx:Label text="Call Back Date" width="108" textAlign="right"
+                          y="224" fontWeight="bold" left="1" />
+                <mx:Label text="Comments" width="293" textAlign="center"
+                          y="199" fontWeight="bold" left="303" />
+                <mx:Label text="Date of Visit" width="108" textAlign="right"
+                          y="114" fontWeight="bold" left="1" />
+                <mx:Label text="Sales Group" width="108" textAlign="right"
+                          y="39" fontWeight="bold" left="1" />
+                <mx:Label text="Sales Rep" width="108" textAlign="right"
+                          y="69" fontWeight="bold" left="1" />
+                <mx:Label text="Buying Group" width="108" textAlign="right"
+                          y="144" fontWeight="bold" left="1" />
+                <mx:Label text="Stocking Dealer" width="108" textAlign="right"
+                          y="170" fontWeight="bold" left="1" />
+                <mx:Label text="Leather" width="80" textAlign="right"
+                          y="299" fontWeight="bold" left="1" />
+                <mx:Label text="Grips" width="80" textAlign="right"
+                          y="325" fontWeight="bold" left="1" />
+                <mx:Label text="Revolvers " width="80" textAlign="right"
+                          y="273" fontWeight="bold" enabled="true"
+                          left="1" />
+                <mx:Label text="Samples Shown" width="138" textAlign="center"
+                          y="251" fontWeight="bold" enabled="true"
+                          left="-1" />
+                <mx:Label text="Dealer Display" width="103" textAlign="center"
+                          y="251" fontWeight="bold" enabled="true"
+                          left="188" />
+                <mx:Label text="Order Taken" width="108" textAlign="right"
+                          y="196" fontWeight="bold" left="1" />
+                <mx:HBox x="0" y="349" width="100%"
+                         horizontalAlign="center" verticalAlign="middle" height="29">
+                    <mx:Button label="Delete Entry" id="btnDelete" enabled="false" click="deleteHandler(event)" />
+                    <mx:Button label="Add Entry" click="saveRecord(event)" id="btnAdd" />
+                    <mx:Button label="Save Entry" click="saveRecord(event)" enabled="false" id="btnSave" />
+                </mx:HBox>
+                <mx:DataGrid y="36" width="296" height="156"
+                             right="10" id="dgCallHistroy" doubleClick="gridDoubleClickHandler(event)"
+                             doubleClickEnabled="true" click="gridDoubleClickHandler(event)">
+                    <mx:columns>
+                        <mx:DataGridColumn headerText="Date" dataField="VISIT_DATE" width="75" labelFunction="formatHistoryDate" />
+                        <mx:DataGridColumn headerText="Comments" dataField="COMMENTS" />
+                    </mx:columns>
+                </mx:DataGrid>
+                <mx:Label y="325" text="{version}" right="1" />
+            </mx:Canvas>
+        </mx:TabNavigator>
+    </ns1:SuperPanel>
+</mx:Module>

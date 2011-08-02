@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Application xmlns:mx="http://www.adobe.com/2006/mxml" layout="absolute" xmlns:ns1="Panels.*"
+                xmlns:ns2="components.*" creationComplete="init()" xmlns:ns3="com.ace.Input.*"
+                xmlns:ns4="com.metrobg.Components.*" creationPolicy="all">
+    <mx:Script>
+        <![CDATA[
+            import mx.events.DropdownEvent;
+            import mx.collections.ArrayCollection;
+            import mx.controls.Alert;
+            import mx.rpc.remoting.RemoteObject;
+            import mx.rpc.events.*;
+
+            [Bindable]
+            private var lookupValue:String;
+
+            private function init():void
+            {
+                Alert.show("Complete", "Init");
+            }
+
+            private function getResultOk(r:Number, evt:Event):void
+            {
+                var recordCount:Number;
+                switch (r)
+                {
+                    case 1:
+                        break;
+                    case 2:
+                        break;
+                }
+            }
+
+            private function buttonHandler(event:MouseEvent):void
+            {
+            }
+
+            private function lookupNameRO(event:Event):void
+            {
+                if (cbx_lookup.selectedIndex != 0)
+                {
+                    lookupValue = cbx_lookup.selectedItem.data;
+                    loadDealerRO(cbx_lookup.selectedItem.data);
+                    cbx_lookup.enabled = false;
+                }
+                else
+                {
+                    mx.controls.Alert.show("Please select a state", "Stop");
+                }
+            }
+
+            public function loadDealerRO(value:String):void
+            {
+                var csg:RemoteObject = new RemoteObject();
+                csg.showBusyCursor = true;
+                csg.destination = "ColdFusion";
+                csg.source = "com.Heritage.DEALERGateway";
+                csg.addEventListener("result", onServiceDataReady);
+                csg.addEventListener("fault", faultHandler);
+                csg.getAllDealers(value);
+            }
+
+            public function onServiceDataReady(event:ResultEvent):void
+            {
+                var act:Object = event.token;
+                switch (act.message.operation)
+                {
+                    case "getAllDealers":
+                        cbx_lookup.enabled = true;
+                        var generalAC:ArrayCollection = new ArrayCollection(act.result as Array);
+                        dgDealers.dataProvider = generalAC;
+                        cbx_lookup.selectedIndex = 0;
+                        //dealer_pnl.status = generalAC.length + " Record(s) found";
+                        break;
+                }
+            }
+
+            private function faultHandler(event:mx.rpc.events.FaultEvent):void
+            {
+                cbx_lookup.enabled = true;
+                Alert.show(event.fault.faultString);
+            }
+
+            private function moveToFront():void
+            {
+                // move the shape to the front by moving it to the front-most
+                // index (which is always numChildren - 1)
+                if (this)
+                    if (this.owner)
+                        if (this.owner.name)
+                            if (parentApplication)
+                                parentApplication.setChildIndex(parentApplication.getChildByName(this.owner.name), parentApplication.numChildren - 1);
+            }
+        ]]>
+    </mx:Script>
+    <mx:HTTPService id="loadGrid" url="http://www.heritagemfg.com/console/flex/queries/getDealers.cfm" useProxy="false"
+                    showBusyCursor="true" result="getResultOk(1,event)" fault="getResultOk(999,event)">
+        <mx:request>
+            <state>{lookupValue}</state>
+        </mx:request>
+    </mx:HTTPService>
+    <mx:HTTPService id="lookupDealer" url="http://www.heritagemfg.com/console/flex/queries/getDealers.cfm" useProxy="false"
+                    showBusyCursor="true" result="getResultOk(5,event)" fault="getResultOk(999,event)">
+        <mx:request>
+            <name>{lookupValue}</name>
+            <type>single</type>
+        </mx:request>
+    </mx:HTTPService>
+    <mx:HTTPService id="loadDealerShow" url="http://www.heritagemfg.com/console/flex/queries/getDealerShows.cfm" useProxy="false"
+                    showBusyCursor="true" result="getResultOk(7,event)" fault="getResultOk(999,event)">
+        <mx:request>
+        </mx:request>
+    </mx:HTTPService>
+    <ns1:SuperPanel y="0" height="536" layout="absolute"
+                    title="Warranty Form" showControls="true" enableResize="false"
+                    id="superpanel1" width="650" x="0">
+        <ns3:ValidatedTextInput y="43" left="115" />
+        <ns3:ValidatedTextInput y="69" left="115" />
+        <ns3:ValidatedTextInput y="89" left="115" />
+        <ns3:ValidatedTextInput y="113" left="115" />
+        <ns3:ValidatedTextInput y="137" left="115" />
+        <ns3:ValidatedTextInput y="113" left="535" width="81" />
+        <mx:Label y="45" text="Name" width="106"
+                  left="5" textAlign="right" />
+        <mx:Label y="16" text="Your Information" width="100%"
+                  left="10" textAlign="center" fontWeight="bold"
+                  fontSize="12" />
+        <mx:Label y="71" text="Address" width="106"
+                  left="5" textAlign="right" />
+        <mx:Label y="168" text="Model" width="102"
+                  left="114" textAlign="center" />
+        <mx:Label y="168" text="Serial Number" width="102"
+                  left="235" textAlign="center" />
+        <mx:Label y="91" text="Apartment /Suite" width="106"
+                  left="5" textAlign="right" />
+        <mx:Label y="139" text="Email Address" width="106"
+                  left="5" textAlign="right" />
+        <mx:Label y="226" text="Select the state where your Rough Rider was purchased" width="329"
+                  left="114" textAlign="left" />
+        <mx:Label y="112" text="City" width="106"
+                  left="5" textAlign="right" />
+        <mx:Label y="115" text="State" width="46"
+                  left="279" textAlign="left" />
+        <mx:Label y="115" text=" Zip" width="35"
+                  left="495" textAlign="right" />
+        <ns3:ValidatedComboBox x="320" y="113" width="177" />
+        <ns3:ValidatedTextInput x="114" y="195" width="102" />
+        <ns3:ValidatedTextInput x="235" y="195" width="102" />
+        <ns4:StateComboBox x="115" y="252" close="lookupNameRO(event)" id="cbx_lookup" />
+        <mx:Canvas x="0" y="286" width="100%"
+                   height="166" id="cnv_Dealer" visible="false">
+            <ns3:ValidatedTextInput y="33" x="71" />
+            <ns3:ValidatedTextInput y="59" x="71" />
+            <ns3:ValidatedTextInput y="79" x="71" />
+            <ns3:ValidatedTextInput y="103" x="71" />
+            <ns3:ValidatedTextInput y="103" width="81" x="525" />
+            <ns3:ValidatedComboBox x="289" y="103" width="177" />
+            <mx:Label y="10" text="Dealer Information" width="100%"
+                      textAlign="center" fontWeight="bold" fontSize="12"
+                      x="0" />
+            <mx:Label y="35" text="Name" width="66"
+                      textAlign="right" left="0" />
+            <mx:Label y="61" text="Addresss" width="66"
+                      textAlign="right" left="0" />
+            <mx:Label y="105" text="City" width="66"
+                      textAlign="right" left="0" />
+            <mx:Label y="105" text="State" width="45"
+                      textAlign="right" left="240" />
+            <mx:Label y="107" text="Zip" width="45"
+                      textAlign="right" left="472" />
+        </mx:Canvas>
+        <mx:Canvas x="0" y="286" width="100%" height="166">
+            <mx:DataGrid x="22" y="42" width="381"
+                         height="115" id="dgDealers">
+                <mx:columns>
+                    <mx:DataGridColumn headerText="Dealer" dataField="NAME" />
+                    <mx:DataGridColumn headerText="City" dataField="CITY" />
+                    <mx:DataGridColumn headerText="State" dataField="STATE" width="45" />
+                </mx:columns>
+            </mx:DataGrid>
+            <mx:Button x="511" y="125" label="No Here"
+                       id="btn_NotFound" click="buttonHandler(event)" />
+            <mx:Button x="422" y="125" label="Found It"
+                       id="btn_FoundIt" click="buttonHandler(event)" />
+            <mx:TextArea x="422" y="10" height="92">
+                <mx:text>
+                    <![CDATA[If you see the Dealer you purchased your Rough Rider from select  it  and click the Found It button, outherwise click Not Here. ]]>
+                </mx:text>
+            </mx:TextArea>
+            <mx:Label y="10" text="Choose Your dealer" width="381"
+                      textAlign="center" fontWeight="bold" fontSize="12"
+                      x="22" />
+        </mx:Canvas>
+        <mx:ControlBar height="42" x="0" y="558">
+            <mx:Spacer width="17" height="6" />
+            <mx:Button label="Find" id="search_btn" tabIndex="3" />
+            <mx:Spacer height="2" width="10" />
+            <mx:Button label="Close" id="close_btn" tabIndex="4"
+                       toolTip="Click here to close this window" useHandCursor="true" buttonMode="true" />
+        </mx:ControlBar>
+    </ns1:SuperPanel>
+</mx:Application>

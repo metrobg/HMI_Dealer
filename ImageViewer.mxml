@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:TitleWindow xmlns:mx="http://www.adobe.com/2006/mxml" layout="absolute" width="408" height="374" 
+	 creationComplete="init()" title="Repair Documents &amp; Images" resize="true"  close="PopUpManager.removePopUp(this);">
+	<mx:Script>
+		<![CDATA[
+			
+			import mx.collections.ArrayCollection;
+			import mx.managers.PopUpManager;
+			import mx.controls.Alert;
+			import mx.events.CloseEvent;
+			import mx.rpc.events.ResultEvent;
+			
+			public var strURL:String = "http://heritagemfg.com/console/flex/data/";
+			public var strImageList:String;
+			[Bindable] public var strOrder:String;
+			
+			private var version:String = " ver: 1.11";
+			
+			private var acImages:ArrayCollection; 
+			private var aryImage:Array;
+			private var vstrURL:String;
+			
+			private var mxw:Number = 350;
+            private var mxh:Number = 375;
+			
+			private function init():void {
+				//repairImage.addEventListener(Event.COMPLETE,onImageComplete);
+				this.title += version;
+				aryImage = new Array();
+				acImages = new ArrayCollection();
+				aryImage = strImageList.split(",");
+				for(var i:int = 0;i < aryImage.length; i++) {
+					acImages.addItem({number: i+1, file: aryImage[i]});
+				}
+				 
+				dgImage.dataProvider = acImages;
+				this.x = (parentApplication.width - this.width) / 2 
+				trace("parent width = " + parentApplication.width);
+				trace ("my width = " + this.width);
+				trace("setting x to " + (parentApplication.width - this.width) / 2);
+						
+			}
+			
+			private function loadImage():void {
+				var file:String;
+				var fileType:String;
+				 				 
+				if(dgImage.selectedIndex > -1) {
+					vstrURL = strURL;
+					file = String(dgImage.selectedItem.file).toLocaleLowerCase();
+					fileType = file.substr(file.length -3,3);
+					vstrURL += strOrder + "/" + file;
+					
+					  if(fileType == "pdf"|| fileType == "doc") {
+					  	  navigateToURL(new URLRequest(vstrURL));
+					  } else {
+					     //repairImage.load(vstrURL);
+					     navigateToURL(new URLRequest(vstrURL));
+				 }
+			   }
+			}
+			private function deletePhoto():void {
+				if(dgImage.selectedIndex > -1) {
+				Alert.show("Are you sure you want to delete this photo ?","Remove Photo",Alert.YES|Alert.CANCEL, this, deleteConfirmed);
+			} else {
+				return;
+			}
+	 }
+			
+			private function deleteConfirmed(event:CloseEvent):void {
+				if (event.detail==Alert.YES) {
+					photoDelete.send();
+					} else {
+			  			Alert.show("Delete Cancelled","Cancel");			  			 
+			  }
+			}
+			private function getResultOk(r:Number,evt:Event):void {
+				if(photoDelete.lastResult.root.status == "1"){
+					acImages.removeItemAt(dgImage.selectedIndex);
+					acImages.refresh();
+				//	repairImage.source = null;
+				} else {
+					Alert.show("Problem deleting Image","Image Delete");
+				}
+			}
+			
+			/* private function scalePhoto():void {
+				if(repairImage.scaleContent) {
+					repairImage.scaleContent = false;
+				} else {
+					repairImage.scaleContent = true;
+				}
+			} */
+public function onImageComplete(e:Event):void
+            {
+                var wthMaxRatio:Number = mxw / mxh;
+                
+                // no resize needed
+                if (e.target.contentWidth <= mxw && e.target.contentHeight <= mxh)
+                {
+                    e.target.x = (mxw - e.target.contentWidth) / 2;
+                    e.target.y = (mxh - e.target.contentHeight) / 2;
+                }
+                else
+                {
+                    var wthImgRatio:Number = e.target.contentWidth / e.target.contentHeight;
+                    
+                    if (wthImgRatio > wthMaxRatio)
+                    {
+                        // will max out the width
+                        e.target.width = mxw;
+                        var imgHeight:Number = Math.round( (mxw / e.target.contentWidth) * e.target.contentHeight );
+                        var newY:Number = Math.round( (mxh - imgHeight) / 2 );
+                        e.target.x = 0;
+                        e.target.y = newY;
+                    }
+                    else
+                    {
+                        // will max out the height
+                        e.target.height = mxh;
+                        var imgWidth:Number = Math.round( (mxh / e.target.contentHeight) * e.target.contentWidth );
+                        var newX:Number = Math.round( (mxw - imgWidth) / 2 );
+                        e.target.x = newX;
+                        e.target.y = 0;
+                    }
+                }
+            }						
+		]]>
+	</mx:Script>
+<mx:HTTPService id="photoDelete"     
+    url="http://www.heritagemfg.com/console/flex/queries/deletePhoto.cfm"
+    useProxy="false"  showBusyCursor="true"  
+    result="getResultOk(1,event)"
+    fault="getResultOk(999,event)">
+  <mx:request>
+     <orderid>{strOrder}</orderid> 
+     <image>{dgImage.selectedItem.file}</image>         	                            
+   </mx:request>   
+</mx:HTTPService>
+	
+	<mx:HDividedBox width="100%" height="100%">
+		
+	 
+	<mx:Canvas width="179" height="100%">
+	<mx:DataGrid y="10" height="244" left="5" right="5" id="dgImage" doubleClickEnabled="true" doubleClick="loadImage();">
+		<mx:columns>
+			<mx:DataGridColumn headerText="Photo" dataField="number" width="70"/>
+			<mx:DataGridColumn headerText="Name" dataField="file"/>
+		</mx:columns>
+	</mx:DataGrid>
+		
+	</mx:Canvas>
+		
+	</mx:HDividedBox>
+	<mx:ControlBar>
+		<mx:Button label="Delete Photo" click="deletePhoto()" toolTip="Delete the currently displayed Image"/>
+		<!--<mx:Button label="Scale Image" click="scalePhoto()"/>-->
+	</mx:ControlBar>
+	
+</mx:TitleWindow>

@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Module xmlns:mx="http://www.adobe.com/2006/mxml" layout="absolute"  xmlns:ns1="Panels.*"
+	 creationComplete="init()">
+	 
+	 
+<mx:Script>
+	<![CDATA[
+		
+		private function init():void {
+			this.moveToFront();
+		}
+		
+		
+		private function moveToFront():void
+{
+   // move the shape to the front by moving it to the front-most
+   // index (which is always numChildren - 1)
+	if (this)
+		if (this.owner)
+			if (this.owner.name)
+				if (parentApplication)
+			   		parentApplication.setChildIndex(parentApplication.getChildByName(this.owner.name), 
+						parentApplication.numChildren - 1);
+}
+	]]>
+</mx:Script> 	 
+<ns1:SuperPanel x="0" y="0" width="350" height="600" layout="absolute" title="ModuleTemplate"
+		showControls="true" enableResize="false" exitFunction="parentApplication.removeModule" 
+		exitFunctionValue="{this.owner.name}" click="moveToFront();" id="superpanel1">						 
+  
+<mx:Panel width="90%" height="390" layout="absolute" title="title" id="panel1" left="10" top="10"> 
+		<mx:DataGrid width="90%" id="resultGrid" itemClick="gridItemSelected(event);"
+								   visible="true" y="10" height="320" left="10">
+								<mx:columns>
+									<mx:DataGridColumn headerText="Model" dataField="description" width="125"/>
+								</mx:columns>
+							</mx:DataGrid>
+		<mx:ControlBar id="controlbar2" horizontalAlign="center">
+		<mx:Button x="147" y="276" label="Load" id="load_btn" click="makeRandom(getModels)" icon="{Images.listIcon}"
+			       useHandCursor="true" buttonMode="true" toolTip="Click here to List All Models"/>
+		<mx:Button label="Close" icon="{Images.closeIcon}" id="close_btn"
+			       click="currentState=&quot;&quot;" toolTip="Click here to close this window" useHandCursor="true" buttonMode="true" labelPlacement="right" width="72" fontSize="9" fontWeight="bold"/>
+		</mx:ControlBar>
+	</mx:Panel>
+	
+	      <!--A D D  /  E D I T   P A N E L -->
+	<mx:Panel width="90%" height="144" layout="absolute"  verticalScrollPolicy="off"
+		title="title" id="modelMaint" visible="true" horizontalScrollPolicy="off" horizontalAlign="center" left="10" top="416">
+			 <mx:HBox width="100%" height="100%" horizontalAlign="center" verticalAlign="middle">
+			 <mx:TextInput id="description_fld" maxChars="20" text="{resultGrid.selectedItem.description}" width="164" x="21" y="10"/>	 
+			<mx:Text x="62" y="251" text="{resultGrid.selectedItem.id}" width="10" id="id_fld" visible="false"/>
+			 </mx:HBox>
+			 
+       <mx:ControlBar id="controlbar1" horizontalAlign="center">
+		<mx:Button label="Save" id="save_btn" icon="{Images.saveIcon}" click="buttonHandler('save')" 
+			       toolTip="Click here to Save this Record"  useHandCursor="true" buttonMode="true" labelPlacement="right" width="68" fontSize="9" fontWeight="bold"/>
+		<mx:Button label="Add" id="add_btn" toolTip="Click here to add a new Model" click="addRecord();"
+			       useHandCursor="true" buttonMode="true" icon="{Images.addIcon}" labelPlacement="right" width="68" fontSize="9" fontWeight="bold"/>
+		<mx:Button label="Delete" id="delete_btn" icon="{Images.removeIcon}"
+			       click="buttonHandler('delete')" toolTip="Click here to Delete this Record" useHandCursor="true" buttonMode="true" labelPlacement="right" width="79" fontSize="9" fontWeight="bold"/>	
+	                
+		</mx:ControlBar>
+	</mx:Panel>  
+		   
+</ns1:SuperPanel> 
+</mx:Module>	 
+	 

@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Application xmlns:mx="http://www.adobe.com/2006/mxml" layout="horizontal" xmlns:ns1="components.*">
+	<mx:Panel width="650" height="480" layout="absolute" left="5" top="5">
+	<mx:HBox right="5" left="5" top="5">
+	<mx:DataGrid height="404">
+		<mx:columns>
+			<mx:DataGridColumn headerText="Company" dataField="col1"/>
+			<mx:DataGridColumn headerText="First Name" dataField="col2"/>
+			<mx:DataGridColumn headerText="Last Name" dataField="col3"/>
+		</mx:columns>
+	</mx:DataGrid>
+		
+	
+	 
+		<mx:Form x="0" y="0" width="100%" height="404">
+			<mx:FormItem label="First name">
+				<mx:TextInput maxChars="20"/>
+			</mx:FormItem>
+			<mx:FormItem label="Last Name">
+				<mx:TextInput maxChars="20"/>
+			</mx:FormItem>
+			<mx:FormItem label="Email">
+				<mx:TextInput maxChars="50"/>
+			</mx:FormItem>
+			<mx:FormItem label="Password">
+				<mx:TextInput displayAsPassword="true" maxChars="20"/>
+			</mx:FormItem>
+			<mx:FormItem label="Address">
+				<mx:TextInput maxChars="40"/>
+			</mx:FormItem>
+			<mx:FormItem label="Address 2">
+				<mx:TextInput maxChars="40"/>
+			</mx:FormItem>
+			<mx:FormItem label="City">
+				<mx:TextInput maxChars="30"/>
+			</mx:FormItem>
+			<mx:FormItem label="State">
+				<ns1:StateComboBox/>
+			</mx:FormItem>
+			<mx:FormItem label="Zipcode">
+				<mx:TextInput maxChars="10"/>
+			</mx:FormItem>
+			<mx:FormItem label="Company">
+				<mx:TextInput maxChars="50"/>
+			</mx:FormItem>
+			<mx:FormItem label="Phone">
+				<mx:TextInput maxChars="25"/>
+			</mx:FormItem>
+			<mx:FormItem label="FFL Number">
+				<mx:TextInput maxChars="25"/>
+			</mx:FormItem>
+			<mx:FormItem label="FFL Expiry">
+				<mx:DateField/>
+			</mx:FormItem>
+		</mx:Form>
+		</mx:HBox>
+		<mx:ControlBar height="40" y="430">
+			<mx:Button label="Button"/>
+		</mx:ControlBar>
+	</mx:Panel>
+	
+</mx:Application>

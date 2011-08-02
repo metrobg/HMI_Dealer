@@ -1,0 +1,338 @@
+<?xml version="1.0"?>
+<mx:TitleWindow xmlns:mx="http://www.adobe.com/2006/mxml" creationComplete="doInit();" close="PopUpManager.removePopUp(this);"
+	 title="Process Transaction " width="310" height="510" layout="absolute" defaultButton="{process_btn}">
+   <mx:XML id="xact" format="e4x">
+   <transaction>
+ 	<order>{orderid_fld.text}</order>
+ 	<cardnumber>{cardNumberInput.text}</cardnumber>
+ 	<expmonth>{month_ns.value }</expmonth>
+ 	<expyear>{year_ns.value }</expyear>
+ 	<cvv>{cvv_fld.text}</cvv>
+ 	<address>{address_fld.text}</address>
+ 	<zipcode>{zipcode_fld.text}</zipcode>
+ 	</transaction>
+ </mx:XML>   
+   
+    
+   
+    <mx:Script>
+        <![CDATA[
+import mx.core.Application;
+import com.metrobg.Classes.Client;
+import mx.events.ItemClickEvent;      	
+import mx.managers.PopUpManager;    
+import mx.events.CloseEvent;
+import mx.events.ValidationResultEvent;
+import mx.validators.ZipCodeValidator; 
+import mx.validators.CreditCardValidator;
+import mx.validators.StringValidator;
+import mx.controls.Alert;
+import mx.formatters.*;
+import com.metrobg.Icons.Images;
+import com.metrobg.Classes.Client;
+
+private var z:ZipCodeValidator =    new ZipCodeValidator();
+private var c:CreditCardValidator = new CreditCardValidator();
+private var s:StringValidator =     new StringValidator(); 
+
+            
+private var currentYear:Number = new Date().getFullYear();
+
+
+[Bindable] public var XMLdata:String;
+         
+public var vResult:ValidationResultEvent;
+
+[Bindable] private var resultObj:Object;
+
+private var resultString:String = '';
+
+private var amountToProcess:String = "0.00";
+
+[Bindable] private var zipValid:Boolean = false;
+[Bindable] private var ccValid:Boolean = false;
+[Bindable] private var addressValid:Boolean = false;
+[Bindable] private var expiration:String ;
+[Bindable] public var OrderID:Number;
+			public var parentModule:Object;
+    
+[Bindable] public var client:Client;
+           
+[Bindable] public var auth_code:String;
+
+          
+private function setTransType(event:ItemClickEvent):void {
+          if(event.currentTarget.selectedValue == 'R') {
+		      orderid_lbl.visible = true;
+		      orderid_fld.visible = true;
+		      orderid_fld.enabled = false;
+		      	      
+	            }  else if (event.currentTarget.selectedValue == 'M') {
+		   				orderid_fld.visible = false;
+	       				orderid_lbl.visible = false;
+	       				amount_lbl.visible = false;
+	       				Amount_lbl.visible = true;
+	       				amount_fld.enabled = true;	       					       					       				
+            }  	
+      }
+      
+private function findString(value:String) : void {
+	    var indx:Number = -1;
+	     
+}
+
+
+private function preValidation():void {
+	
+	var mon:String = '';
+	var year:String = ''
+	
+	
+	z.domain = "US or Canada";
+	z.listener = zipcode_fld;
+	vResult = z.validate(zipcode_fld.text);
+	if(vResult.type == ValidationResultEvent.INVALID) {
+		zipValid = false;
+	} else {
+		zipValid = true;
+	}
+	
+	s.listener = address_fld;
+	vResult = s.validate(address_fld.text);
+	if(vResult.type == ValidationResultEvent.INVALID) {
+		addressValid = false;	
+	} else {
+		addressValid = true;
+	}
+	
+	vResult = ccV.validate();
+	if(vResult.type == ValidationResultEvent.INVALID) {
+		ccValid = false;	
+	  } else {
+		ccValid = true;
+	}
+     
+     if(month_ns.value > 9) {
+        mon = String(month_ns.value);
+     }  else {
+     	 mon = "0" + String(month_ns.value);
+     }
+       year = String( year_ns.value);
+       year = year.substr(2,2);
+     
+     expiration = mon + "" + year;
+     if (Number(amount_fld.text) > 999.99) {
+		 Alert.show("The amount is too large to process","Error", 4, this, null,Images.stopIcon);
+		 return;
+	}
+	 if(zipValid && ccValid && addressValid){
+		//Alert.show("Amount " + nf.format(amount_fld.text));
+		processTransaction.send();
+	  }  else {
+		Alert.show("Please check any items outlined in Red","Error", 4, this, null,Images.stopIcon);
+	}
+}
+
+	    
+private function getResultOk(r:Number,event:Event):void {
+	switch(r)
+		{
+case 1:  
+       
+        resultString = processTransaction.lastResult.toString();
+        var pattern:RegExp = /\n/gi;
+        resultString = resultString.replace(pattern,"&");
+        var params:Array = resultString.split("&"); 
+       
+        var key:String = '';       
+        var str:String;
+        var idx:int = -1;
+           
+          for (var i:int = 0;i < params.length; i++) {
+          	    str = params[i];
+          	    idx = str.indexOf("=");
+          	    key = str.slice(0,idx)
+          	    switch (key)
+          	    {
+          	       case  "ssl_result":
+          	          resultObj.status =  str.slice(idx+1,str.length);	
+          	    	  break;
+          	      case  "ssl_result_message":
+          	          resultObj.message =  str.slice(idx+1,str.length);	
+          	    	  break;
+          	     case  "ssl_approval_code":
+          	          resultObj.code =  str.slice(idx+1,str.length);	
+          	    	  break;       
+          	    case  "ssl_amount":
+          	          resultObj.amount =  str.slice(idx+1,str.length);	
+          	    	  break;        	    	
+          	    }         	    
+          }
+              if(int(resultObj.status) == 0) {
+              	 process_btn.enabled = false; 
+              	 msg_ta.visible = false;           	           
+              	Alert.show("Transaction  " + resultObj.message , "Processed", 4, this, alertClickHandler,Images.okIcon);
+              
+                      status_fld.text =  resultObj.message; 
+                      auth_code = resultObj.code;
+                      msg_fld.text = cf.format(resultObj.amount) + " / " +  auth_code;
+                      msg_ta.visible = true;
+                     	msg_ta.text = resultObj.message;
+                     }  else { 	
+                     	msg_ta.visible = true;
+                     	msg_ta.text = resultObj.message;
+                    }
+    break;
+
+case 2:
+       msg_ta.text =    updatePayStatus.lastResult.root.message;               
+  break;
+  }
+   
+}
+
+private function alertClickHandler(event:CloseEvent):void {
+	             if (event.detail==Alert.OK) {
+                     updatePayStatus.send();                   
+                  }  
+}
+
+private function doInit():void {
+                PopUpManager.centerPopUp(this); 
+                //orderid_fld.setFocus();       
+                resultObj = new Object;    
+                OrderID = parentModule.ID;
+                amountToProcess = parentModule.total_fld.text;
+                amount_fld.text = amountToProcess;
+                
+                 if(parentModule.docType == "Estimate") {
+                	this.OrderID = 9999;
+                	this.orderid_fld.enabled = false;
+                	chargeType.selectedValue = 'M';
+                	this.chargeType.enabled = false;
+                	this.amount_fld.enabled = true;
+                	Alert.show("You Can't Process Estimates.\n Only finalized Orders","Error", 4, this, closeWindowHandler,Images.stopIcon);
+                	
+                }  else {  
+                	this.chargeType.enabled = true;
+                	chargeType.selectedValue = 'R';
+                	this.amount_fld.enabled = false;
+                	this.orderid_fld.enabled = false;
+                 } 
+            }
+            private function closeWindowHandler(event:CloseEvent):void {
+	             if (event.detail==Alert.OK) {
+                     PopUpManager.removePopUp(this);                 
+                  }  
+}
+        ]]>
+    </mx:Script>
+ 
+<mx:CurrencyFormatter id="cf" currencySymbol="$" precision="2" />
+<mx:NumberFormatter id="nf" precision="2"  />
+
+<mx:HTTPService  id="updatePayStatus"
+    url="http://www.heritagemfg.com/console/flex/queries/updatePayStatus.cfm"
+    useProxy="false"  showBusyCursor="true" method="POST"
+    result="getResultOk(2,event)">   
+<mx:request>    
+	<orderid>{OrderID}</orderid>
+	<message>{status_fld.text}</message>
+	<card>{cardNumberInput.text}</card>
+	<expiry>{expiration}</expiry>
+	<cvv>{cvv_fld.text}</cvv>
+	<code>{auth_code}</code>
+</mx:request> 
+</mx:HTTPService> 
+
+<mx:HTTPService  id="processTransaction"
+    url="http://www.heritagemfg.com/console/flex/queries/viaklixProxy.cfm"
+    useProxy="false"  showBusyCursor="true" method="POST"
+    result="getResultOk(1,event)" resultFormat="text">   
+<mx:request>    
+	<ssl_card_number>{cardNumberInput.text}</ssl_card_number>
+	<ssl_exp_date>{expiration}</ssl_exp_date>
+	<ssl_test_mode>false</ssl_test_mode>
+	<ssl_transaction_type>SALE</ssl_transaction_type>
+	<ssl_merchant_id>412563</ssl_merchant_id>
+	<ssl_pin>N4LJQK</ssl_pin>
+	<ssl_user_id>webpage</ssl_user_id>
+	<ssl_amount>{nf.format(amount_fld.text)}</ssl_amount>
+	<ssl_salestax>0.00</ssl_salestax>
+	<ssl_cvv2>Present</ssl_cvv2>
+	<ssl_cvv2cvc2>{cvv_fld.text}</ssl_cvv2cvc2>
+	<ssl_avs_address>{address_fld.text}</ssl_avs_address>
+	<ssl_avs_zip>{zipcode_fld.text}</ssl_avs_zip>
+	<ssl_show_form>false</ssl_show_form>
+	<ssl_invoice_number>{OrderID}</ssl_invoice_number>
+	<ssl_description>Repair/Misc</ssl_description>
+	<ssl_email>quickdraw@heritagemfg.com</ssl_email>
+	<ssl_customer_code>Unknown</ssl_customer_code>
+	<ssl_result_format>ASCII</ssl_result_format>
+</mx:request> 
+</mx:HTTPService> 
+
+<!-- Define model for the credit card data. -->
+    <mx:Model id="creditcard">
+        <card>    
+            <cardType>{cardTypeCombo.selectedItem.data}</cardType>
+            <cardNumber>{cardNumberInput.text}</cardNumber>
+        </card>
+    </mx:Model>
+    	
+<mx:CreditCardValidator id="ccV" 
+        cardTypeSource="{creditcard}" cardTypeProperty="cardType"
+        cardNumberSource="{creditcard}" cardNumberProperty="cardNumber"
+        cardTypeListener="{cardTypeCombo}"
+        cardNumberListener="{cardNumberInput}"/>
+	 
+	
+
+    <mx:RadioButtonGroup id="chargeType" itemClick="setTransType(event)"/>
+    <mx:RadioButton x="93" label="Misc Item" groupName="chargeType" y="36" value="M"/>
+    <mx:RadioButton x="93" label="Repair Ticket" groupName="chargeType" y="10" value="R" selected="true"/>  
+    <mx:Label x="-12" y="10" text="Charge Type" width="100" fontWeight="bold" textAlign="right"/>
+    
+    <mx:TextInput x="93" y="62" id="orderid_fld" maxChars="10" restrict="0-9" visible="true" text="{OrderID}"
+    	 disabledColor="#000000" fontWeight="bold"/>      
+                <mx:ComboBox id="cardTypeCombo" x="93" y="92" width="132">
+                    <mx:dataProvider>
+                        <mx:Object label="American Express" data="American Express"/>
+                        <mx:Object label="Diners Club" data="Diners Club"/>
+                        <mx:Object label="Discover" data="Discover"/>
+                        <mx:Object label="MasterCard" data="MasterCard"/>
+                        <mx:Object label="Visa" data="Visa"/>
+                    </mx:dataProvider>
+                </mx:ComboBox>         
+                <mx:TextInput id="cardNumberInput" x="93" y="122" width="132" maxChars="16"/>
+            
+   
+    <mx:Label x="-12" y="157" text="Expiration" width="100" fontWeight="bold" textAlign="right"/>
+    <mx:Label x="-12" y="124" text="Card Number" width="100" fontWeight="bold" textAlign="right"/>
+    <mx:Label x="-12" y="98" text="Card Type" width="100" fontWeight="bold" textAlign="right"/>
+    <mx:NumericStepper x="93" y="155" id="month_ns" minimum="1" maximum="12" stepSize="1" value="1"/>
+    <mx:NumericStepper x="180.25" y="155" id="year_ns" value="{currentYear}" minimum="{currentYear}" maximum="{currentYear + 7}" stepSize="1"/>
+    <mx:TextInput x="93" y="182" maxChars="4" id="cvv_fld" width="50"/>
+    <mx:Label x="-12" y="186" text="CVV" width="100" fontWeight="bold" textAlign="right"/>
+   
+    <mx:TextInput x="93" y="212" id="address_fld" maxChars="40" text="{client.address}" fontWeight="bold" color="#000000"/>
+    <mx:Label x="-12" y="214" text="Address" width="100" fontWeight="bold" textAlign="right"/>
+   
+    <mx:TextInput x="93" y="240" id="zipcode_fld" maxChars="5" restrict="0-9" text="{client.zipcode}" color="#000000" fontWeight="bold" width="48"/>
+    <mx:Label x="-12" y="244" text="Zipcode" width="100" fontWeight="bold" textAlign="right"/>
+    
+    <mx:Label x="93" y="270" text="0.00" id="amount_lbl" fontWeight="bold" textAlign="left"/>
+    <mx:TextInput x="93" y="268" id="amount_fld" maxChars="6" width="80"
+    	 restrict="0-9." enabled="false" disabledColor="#000000" fontWeight="bold"/>
+    <mx:Label x="-12" y="270" text="Amount" width="100" fontWeight="bold" textAlign="right" id="Amount_lbl"/>   
+ 
+    <mx:Label x="-12" y="296" text="Status" width="100" fontWeight="bold" textAlign="right"/>
+    <mx:Label x="96" y="296" text="Pending" fontWeight="bold" id="status_fld"/>
+    
+    <mx:Button x="103" y="345" label="Authorize" id="process_btn" click="preValidation()"/>
+    <mx:Label x="93" y="318" fontWeight="bold" id="msg_fld" text="0.00"/>
+    <mx:Label x="26" y="64" text="Order" id="orderid_lbl" fontWeight="bold"/>
+    <mx:TextArea x="20" y="388" height="72" id="msg_ta" visible="false" wordWrap="true" width="254"/>
+    	
+</mx:TitleWindow>
+ 

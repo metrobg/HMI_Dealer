@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Application xmlns:mx="http://www.adobe.com/2006/mxml" layout="absolute" xmlns:ns1="components.*"
+	 creationComplete="init()" backgroundColor="#6e7cab">
+	<mx:Script source="HMSGlobal.as" />
+	 
+<mx:Style source="main.css" />
+<mx:Number id="security"/>
+ <mx:XMLList id="dp3">
+<root> 
+</root>
+</mx:XMLList>   
+
+<mx:HTTPService id="getMenu"     
+    url="http://www.heritagemfg.com/console/flex/queries/menu.cfm" resultFormat="xml"
+    useProxy="false" result="displayMenu()">  
+    <mx:request>
+    <security>{security}</security>
+    </mx:request>
+</mx:HTTPService>
+
+    
+	<mx:MenuBar width="100%" height="25" id="menubar" labelField="@label"  showRoot="false" itemClick="menuItemSelected(event)" visible="false" />	
+ 
+
+
+<mx:ModuleLoader id="module0" x="0" y="48" error="moduleHandlerClass.errorHandler('module0',event)" ready="moduleHandlerClass.moduleLoadDone(module0)" width="100%"/>
+<mx:ModuleLoader id="module1" x="0" y="48" error="moduleHandlerClass.errorHandler('module1',event)" ready="moduleHandlerClass.moduleLoadDone(module1)" width="100%"/>
+<mx:ModuleLoader id="module2" x="0" y="48" error="moduleHandlerClass.errorHandler('module2',event)" ready="moduleHandlerClass.moduleLoadDone(module2)" width="100%"/>
+<mx:ModuleLoader id="module3" x="0" y="48" error="moduleHandlerClass.errorHandler('module3',event)" ready="moduleHandlerClass.moduleLoadDone(module3)" width="100%"/>
+<mx:ModuleLoader id="module4" x="0" y="48" error="moduleHandlerClass.errorHandler('module4',event)" ready="moduleHandlerClass.moduleLoadDone(module4)" width="100%"/>
+<mx:ModuleLoader id="module5" x="0" y="48" error="moduleHandlerClass.errorHandler('module5',event)" ready="moduleHandlerClass.moduleLoadDone(module5)" width="100%"/>
+<mx:ModuleLoader id="module6" x="0" y="48" error="moduleHandlerClass.errorHandler('module6',event)" ready="moduleHandlerClass.moduleLoadDone(module6)" width="100%" />
+<mx:ModuleLoader id="module7" x="0" y="48" error="moduleHandlerClass.errorHandler('module7',event)" ready="moduleHandlerClass.moduleLoadDone(module7)" width="100%"/>
+<mx:ModuleLoader id="module8" x="0" y="48" error="moduleHandlerClass.errorHandler('module8',event)" ready="moduleHandlerClass.moduleLoadDone(module8)" width="100%"/>
+<mx:ModuleLoader id="module9" x="0" y="48" error="moduleHandlerClass.errorHandler('module9',event)" ready="moduleHandlerClass.moduleLoadDone(module9)" width="100%">
+</mx:ModuleLoader>
+
+<mx:WebService id="webService"
+            wsdl="http://heritagemfg.com/console/flex/queries/flash/HMI.cfc?wsdl">
+        <mx:operation name="WhoAmI"
+                resultFormat="object"       
+                result="WhoAmI_result(event);"
+                fault="WhoAmI_fault(event);">  
+                 <mx:request>
+                     <key>{flexID}</key>
+                 </mx:request> 
+                 </mx:operation> 
+    </mx:WebService> 
+    
+	<mx:HBox width="100%" height="214" horizontalCenter="0" horizontalAlign="center" verticalAlign="middle" verticalCenter="0">
+		<mx:VBox>
+		<mx:Label text="Ecart User: {txtUSERID}" width="100%" fontWeight="bold" textAlign="center" fontSize="12"/>
+		<mx:Image source="@Embed('assets/HMI_Logo.gif')"/>
+		 
+
+		</mx:VBox>
+	</mx:HBox>
+<mx:ProgressBar id="progress" width="226" horizontalCenter="0" verticalCenter="-150" visible="false"  height="58"/>
+ 
+</mx:Application>

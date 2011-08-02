@@ -1,0 +1,55 @@
+<?xml version="1.0"?>
+<mx:TitleWindow xmlns:mx="http://www.adobe.com/2006/mxml" creationComplete="doInit();" title="Select date" width="368" height="146"
+	 close="PopUpManager.removePopUp(this);">
+    <mx:Script>
+        <![CDATA[
+        	
+            import mx.managers.PopUpManager;    
+            import mx.events.CloseEvent;
+            import mx.containers.FormItem;
+            import mx.events.CalendarLayoutChangeEvent;
+            
+            
+            public var dateValid:Boolean = false;
+            [Bindable]
+            public var validDate:Boolean;
+            public var parentModule:Object;
+           
+private function process():void {
+           	if(validDate) {
+           	parentModule.shipdate_df.selectedDate = new Date(dateOut_df.text);                	        	
+           	parentModule.closeDateOutWindow(new CloseEvent("close"));        	 	        	 
+           }
+      }
+      
+private function validate(eventObj:CalendarLayoutChangeEvent):void {
+			// Make sure selectedDate is not null.
+	if (eventObj.currentTarget.selectedDate == null) {
+		validDate = false;
+		
+    	accept_btn.enabled =  false;
+  			} else {
+  				
+  				validDate = true;
+  				accept_btn.enabled = true;
+       }
+}   
+             
+private function doInit():void {
+                PopUpManager.centerPopUp(this); 
+                dateOut_df.setFocus();              
+            }
+        ]]>
+    </mx:Script>
+    
+    <mx:Form width="100%" height="100%">
+        <mx:FormItem label="Date Out" required="true">
+            <mx:DateField id="dateOut_df" change="validate(event)"/>
+        </mx:FormItem>
+        <mx:FormItem>
+            <mx:Button label="Accept" click="process()" id="accept_btn" enabled="false"/>
+        </mx:FormItem>
+    </mx:Form>
+    	
+</mx:TitleWindow>
+ 

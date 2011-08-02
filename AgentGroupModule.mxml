@@ -1,0 +1,482 @@
+<mx:Module xmlns:mx="http://www.adobe.com/2006/mxml" layout="absolute" creationComplete="init()"
+           xmlns:ns1="Panels.*" xmlns:ns3="com.ace.Input.*" xmlns:ns2="com.tools.footerDataGrid.*"
+           xmlns:ns4="components.*">
+    <mx:Script source="AgentGroupModule.as" />
+    <!--
+         <mx:RemoteObject id="Repgateway" destination="ColdFusion" concurrency="single"
+         source="com.Heritage.SALESREPGateway"
+         result="onServiceDataReady(event)" showBusyCursor="true"
+         fault="onServiceFault(event)">
+         <mx:method name="getRepById" />
+         <mx:method name="saveRep" />
+         <mx:method name="deleteRepById" />
+         <mx:method name="getAllReps" />
+
+         </mx:RemoteObject>-->
+    <!-- <mx:RemoteObject id="Agencygateway" destination="ColdFusion"
+         source="com.Heritage.AGENCYGateway" concurrency="single"
+         result="onServiceDataReady(event)" showBusyCursor="true"
+         fault="onServiceFault(event)">
+         <mx:method name="getAgencyById" />
+         <mx:method name="saveAgency" />
+         <mx:method name="deleteAgencyById" />
+         <mx:method name="getAllAgency" />
+
+         </mx:RemoteObject>
+    -->
+    <!--<mx:RemoteObject id="Groupgateway" destination="ColdFusion"
+         source="com.Heritage.PURCHASE_GROUPGateway"  concurrency="single"
+         result="onServiceDataReady(event)" showBusyCursor="true"
+         fault="onServiceFault(event)">
+         <mx:method name="getGroupById" />
+         <mx:method name="saveGroup" />
+         <mx:method name="deleteGroupById" />
+         <mx:method name="getAllGroups" />
+         </mx:RemoteObject>-->
+    <ns1:SuperPanel x="0" y="0" width="625"
+                    height="450" layout="absolute" title="Rep &amp; Agency Manager"
+                    showControls="true" enableResize="false" exitFunction="parentApplication.removeModule"
+                    exitFunctionValue="{this.owner.name}" click="moveToFront();" id="superpanel1">
+        <mx:TabNavigator id="tn1" creationPolicy="all" top="10"
+                         left="10" right="10" bottom="10">
+            <mx:Canvas label="Summary" width="100%" height="100%" show="tabSelected()">
+                <ns3:ValidatedComboBox x="132" y="62" id="cbx_AGENCY"
+                                       change="filterAgency()" toolTip="Select an Agency on which to filter the Reps" />
+                <mx:Label x="10" y="35" text="Rep Name"
+                          fontWeight="bold" width="114" textAlign="right" />
+                <mx:Label x="10" y="64" text="Sales Agency"
+                          fontWeight="bold" width="114" textAlign="right" />
+                <mx:DataGrid y="90" width="431" horizontalCenter="0"
+                             id="dgReps" doubleClick="loadSalesRepForm();" doubleClickEnabled="true"
+                             height="202">
+                    <mx:columns>
+                        <mx:DataGridColumn headerText="First Name" dataField="REP_FNAME" id="vREP_FNAME" width="100" />
+                        <mx:DataGridColumn headerText="Last Name" dataField="REP_LNAME" width="100" />
+                        <mx:DataGridColumn headerText="Agency" dataField="REP_SALESGROUP" labelFunction="showAgency" id="vREP_SALESGROUP" />
+                    </mx:columns>
+                </mx:DataGrid>
+                <!--<ns2:FooterDataGrid y="90" width="373" horizontalCenter="0" id="dgReps" doubleClick="loadSalesRepForm();" doubleClickEnabled="true" height="202">
+                     <ns2:columns>
+                     <mx:DataGridColumn headerText="First Name" dataField="REP_FNAME" id="vREP_FNAME" width="75"/>
+                     <mx:DataGridColumn headerText="Last Name" dataField="REP_LNAME" width="75"/>
+                     <mx:DataGridColumn headerText="Agency"  dataField="REP_SALESGROUP" labelFunction="showAgency" id="vREP_SALESGROUP"/>
+                     </ns2:columns>
+                     <ns2:footer>
+                     <ns2:SummaryFooter>
+                     <ns2:columns>
+                     <ns2:SummaryColumn label="Record Count:"/>
+                     <ns2:SummaryColumn operation='count'  dataColumn='{vREP_SALESGROUP}' />
+                     </ns2:columns>
+                     </ns2:SummaryFooter>
+                     </ns2:footer>
+
+                     </mx:d>-->
+                <mx:DataGrid y="90" width="373" horizontalCenter="0"
+                             id="dgAgency" visible="false" doubleClick="loadAgencyForm();"
+                             doubleClickEnabled="true" height="178" sortableColumns="false">
+                    <mx:columns>
+                        <mx:DataGridColumn headerText="Agency Name" dataField="AGENCY_COMPANY" />
+                    </mx:columns>
+                </mx:DataGrid>
+                <mx:DataGrid y="90" width="373" horizontalCenter="0"
+                             id="dgGroup" visible="false" doubleClick="loadGroupForm();"
+                             doubleClickEnabled="true" height="178" sortableColumns="false">
+                    <mx:columns>
+                        <mx:DataGridColumn headerText="Group Name" dataField="GROUP_COMPANY" />
+                        <mx:DataGridColumn headerText="State" dataField="GROUP_STATE" />
+                    </mx:columns>
+                </mx:DataGrid>
+                <mx:Label x="0" y="2" text="Sales Rep / Agency Search"
+                          width="100%" textAlign="center" fontWeight="bold"
+                          fontSize="12" />
+                <ns3:ValidatedTextInput x="132" y="33" id="searchText"
+                                        change="filterPhrase()" toolTip="Enter the First or Last of the Rep you are looking for." />
+                <mx:HBox x="0" y="300" width="100%"
+                         height="32" id="hb_tab0" horizontalAlign="center"
+                         verticalAlign="middle">
+                    <mx:Button label="Load Groups" id="btn_LoadGroup" click="loadAllGroups()" toolTip="Click here to load all Agencies." />
+                    <mx:Button label="Load Agencies" id="btn_LoadAgency" click="loadAllAgency()" toolTip="Click here to load all Agencies." />
+                    <mx:Button label="Load Reps" id="btn_LoadReps" click="loadAllReps()" toolTip="Click here to list all Reps or clear the search input above." />
+                </mx:HBox>
+            </mx:Canvas>
+            <mx:Canvas label="Rep Info" width="100%" height="100%"
+                       show="tabSelected()" id="cnv_Rep">
+                <ns3:ValidatedTextInput width="66" id="REP_ID" y="10"
+                                        x="87" visible="false" dataType="number"
+                                        maxDataChars="6" />
+                <ns3:ValidatedTextInput width="125" id="REP_FNAME" y="40"
+                                        x="91" dataType="alphaNumeric" maxDataChars="30"
+                                        minDataChars="1" />
+                <ns3:ValidatedTextInput width="125" id="REP_LNAME" y="69"
+                                        x="91" dataType="alphaNumeric" maxDataChars="45"
+                                        minDataChars="1" />
+                <ns3:ValidatedTextInput width="161" id="REP_ADDRESS1" y="97"
+                                        x="91" dataType="string" maxDataChars="65"
+                                        minDataChars="5" />
+                <ns3:ValidatedTextInput width="161" id="REP_ADDRESS2" y="126"
+                                        x="91" dataType="string" maxDataChars="65" />
+                <ns3:ValidatedTextInput width="161" id="REP_CITY" y="156"
+                                        x="91" minDataChars="1" maxDataChars="45" />
+                <ns3:ValidatedComboBox x="91" y="187" id="REP_STATE"
+                                       dataField="DATA" labelField="LABEL" badIndexes="0"
+                                       selectedIndex="0" width="159" />
+                <ns3:ValidatedTextInput id="REP_ZIP" width="65" x="91"
+                                        y="216" maxDataChars="6" minDataChars="5" />
+                <ns3:ValidatedTextInput id="REP_PHONE" width="98" x="316"
+                                        y="40" formatter="_phoneFormat" dataType="number"
+                                        maxDataChars="10" />
+                <ns3:ValidatedTextInput id="REP_PHONE_EXT" width="60" x="463"
+                                        y="40" maxDataChars="6" />
+                <ns3:ValidatedTextInput id="REP_FAX" width="98" x="316"
+                                        y="68" formatter="_phoneFormat" dataType="number"
+                                        maxDataChars="10" />
+                <ns3:ValidatedTextInput id="REP_MOBILE" width="98" x="316"
+                                        y="96" formatter="_phoneFormat" dataType="number"
+                                        maxDataChars="10" />
+                <ns3:ValidatedTextInput id="REP_EMAIL" width="207" x="316"
+                                        y="124" dataType="email" maxDataChars="65"
+                                        lower="true" />
+                <ns3:ValidatedComboBox x="316" y="183" id="REP_SALESGROUP"
+                                       labelField="AGENCY_COMPANY" dataField="AGENCY_ID" badIndexes="0" />
+                <ns3:ValidatedTextInput id="REP_HMI_ID" width="81" x="316"
+                                        y="260" dataType="number" maxDataChars="6" />
+                <mx:Label y="132" text="Suite / Apt" width="78"
+                          fontWeight="bold" textAlign="right" left="8" />
+                <mx:Label y="185" text="Agency" width="53"
+                          fontWeight="bold" textAlign="right" left="258" />
+                <mx:Label y="262" text="HMI ID" width="53"
+                          fontWeight="bold" textAlign="right" left="258" />
+                <mx:Label y="213" text="Region" width="53"
+                          fontWeight="bold" textAlign="right" left="258" />
+                <mx:Label y="126" text="Email" width="53"
+                          fontWeight="bold" textAlign="right" left="258" />
+                <mx:Label y="98" text="Mobile" width="53"
+                          fontWeight="bold" textAlign="right" left="258" />
+                <mx:Label y="70" text="Fax" width="53"
+                          fontWeight="bold" textAlign="right" left="258" />
+                <mx:Label y="42" text="Phone" width="53"
+                          fontWeight="bold" textAlign="right" left="258" />
+                <mx:Label y="42" text="First Name" width="78"
+                          fontWeight="bold" textAlign="right" left="8" />
+                <mx:Label y="72" text="Last Name" width="78"
+                          fontWeight="bold" textAlign="right" left="8" />
+                <mx:Label y="99" text="Address" width="78"
+                          fontWeight="bold" textAlign="right" left="8" />
+                <mx:Label y="158" text="City" width="78"
+                          fontWeight="bold" textAlign="right" left="8" />
+                <mx:Label y="192" text="State" width="78"
+                          fontWeight="bold" textAlign="right" left="8" />
+                <mx:Label y="222" text="Zip" width="78"
+                          fontWeight="bold" textAlign="right" left="8" />
+                <mx:Label x="10" y="2" text="Rep Address Information"
+                          width="227" fontWeight="bold" textAlign="center"
+                          fontSize="12" />
+                <mx:Label x="258" y="2" text="Rep Contact Information"
+                          width="223" fontWeight="bold" textAlign="center"
+                          fontSize="12" />
+                <mx:Label x="290" y="162" text="Miscellaneous"
+                          width="253" fontWeight="bold" textAlign="center"
+                          fontSize="12" />
+                <mx:VRule y="31" width="9" height="251" horizontalCenter="-33" />
+                <mx:HRule x="297" y="152" width="246" height="4" />
+                <mx:Label y="42" text="Ext" width="27"
+                          fontWeight="bold" textAlign="right" left="432" />
+                <mx:HBox x="0" y="300" width="100%"
+                         height="32" id="hb_tab1" horizontalAlign="center"
+                         verticalAlign="middle">
+                    <mx:Button label="Add Rep" click="addRepRecord(event)" />
+                    <mx:Button label="Save Rep" click="saveRepRecord(event)" />
+                </mx:HBox>
+                <mx:HRule y="290" width="510" height="2" left="20" />
+                <mx:Label x="25" y="270" text="*"
+                          width="11" color="#F5290D" fontWeight="bold"
+                          fontSize="12" height="20" />
+                <mx:Label x="27" y="193" text="*"
+                          width="11" color="#F5290D" fontWeight="bold"
+                          fontSize="12" height="20" />
+                <mx:Label x="33" y="159" text="*"
+                          width="11" color="#F5290D" fontWeight="bold"
+                          fontSize="12" height="20" />
+                <mx:Label x="1" y="74" text="*"
+                          width="11" color="#F5290D" fontWeight="bold"
+                          fontSize="12" height="20" />
+                <mx:Label x="7" y="100" text="*"
+                          width="11" color="#F5290D" fontWeight="bold"
+                          fontSize="12" height="20" />
+                <mx:Label x="1" y="44" text="*"
+                          width="11" color="#F5290D" fontWeight="bold"
+                          fontSize="12" height="20" />
+                <mx:Label x="37" y="223" text="*"
+                          width="11" color="#F5290D" fontWeight="bold"
+                          fontSize="12" height="20" />
+                <mx:Label x="41" y="270" text="Indicates a required field" width="153" />
+                <ns3:ValidatedTextArea x="316" y="212" id="REP_REGION"
+                                       maxDataChars="200" width="202" />
+            </mx:Canvas>
+            <mx:Canvas label="Agency Info" width="100%" height="100%"
+                       show="tabSelected()" id="cnv_Agency">
+                <ns3:ValidatedTextInput width="125" id="AGENCY_ID" y="40"
+                                        x="76" visible="false" dataType="number" />
+                <ns3:ValidatedTextInput width="125" id="AGENCY_COMPANY" y="40"
+                                        x="86" dataType="string" maxDataChars="50"
+                                        minDataChars="1" />
+                <ns3:ValidatedTextInput width="141" id="AGENCY_ADDRESS1" y="69"
+                                        x="86" dataType="string" maxDataChars="50"
+                                        minDataChars="1" />
+                <ns3:ValidatedTextInput width="142" id="AGENCY_ADDRESS2" y="97"
+                                        x="86" dataType="string" maxDataChars="50" />
+                <ns3:ValidatedTextInput width="142" id="AGENCY_CITY" y="126"
+                                        x="86" dataType="string" maxDataChars="30"
+                                        minDataChars="1" />
+                <ns3:ValidatedComboBox x="86" y="156" id="AGENCY_STATE"
+                                       dataField="DATA" labelField="LABEL" defaultValue="0"
+                                       badIndexes="0" width="159" />
+                <ns3:ValidatedTextInput id="AGENCY_ZIP" width="65" x="86"
+                                        y="186" dataType="alphaNumeric" maxDataChars="6"
+                                        minDataChars="1" />
+                <ns3:ValidatedTextInput width="142" id="AGENCY_SHORT_NAME" y="217"
+                                        x="86" dataType="string" maxDataChars="50" />
+                <mx:Label y="99" text="Suite " width="68"
+                          fontWeight="bold" textAlign="right" left="8" />
+                <mx:Label y="42" text="Company" width="68"
+                          fontWeight="bold" textAlign="right" left="8" />
+                <mx:Label y="72" text="Address" width="68"
+                          fontWeight="bold" textAlign="right" left="8" />
+                <mx:Label y="132" text="City" width="68"
+                          fontWeight="bold" textAlign="right" left="8" />
+                <mx:Label y="158" text="State" width="68"
+                          fontWeight="bold" textAlign="right" left="8" />
+                <mx:Label y="192" text="Zip" width="68"
+                          fontWeight="bold" textAlign="right" left="8" />
+                <mx:Label y="213" text="Short" width="68"
+                          fontWeight="bold" textAlign="right" left="10" />
+                <mx:Label y="226" text="Name" width="68"
+                          fontWeight="bold" textAlign="right" left="10" />
+                <ns3:ValidatedTextInput id="AGENCY_PHONE" width="98" x="316"
+                                        y="40" formatter="_phoneFormat" dataType="number"
+                                        maxDataChars="10" minDataChars="1" />
+                <ns3:ValidatedTextInput id="AGENCY_EXT" width="60" x="463"
+                                        y="40" dataType="number" maxDataChars="6" />
+                <ns3:ValidatedTextInput id="AGENCY_FAX" width="98" x="316"
+                                        y="68" formatter="_phoneFormat" dataType="number"
+                                        maxDataChars="10" />
+                <ns3:ValidatedTextInput id="AGENCY_CONTACT" width="213" x="268"
+                                        y="130" maxDataChars="50" upper="true"
+                                        dataType="string" />
+                <ns3:ValidatedTextInput id="AGENCY_EMAIL" width="213" x="268"
+                                        y="176" dataType="email" maxDataChars="50"
+                                        lower="true" />
+                <ns3:ValidatedTextInput id="AGENCY_WEBADDRESS" width="213" x="268"
+                                        y="226" maxDataChars="50" lower="true"
+                                        dataType="string" />
+                <mx:Label y="156" text="Email Address" width="213"
+                          fontWeight="bold" textAlign="center" left="268" />
+                <mx:Label y="206" text="Website" width="213"
+                          fontWeight="bold" textAlign="center" left="268" />
+                <mx:Label y="108" text="Contact / Manager" width="213"
+                          fontWeight="bold" textAlign="center" left="268" />
+                <mx:Label y="70" text="Fax" width="53"
+                          fontWeight="bold" textAlign="right" left="258" />
+                <mx:Label y="42" text="Phone" width="53"
+                          fontWeight="bold" textAlign="right" left="258" />
+                <mx:Label y="44" text="Ext" width="27"
+                          fontWeight="bold" textAlign="right" left="432" />
+                <mx:Label x="10" y="2" text="Corporate Address"
+                          width="221" fontWeight="bold" textAlign="center"
+                          fontSize="12" />
+                <mx:Label x="258" y="2" text="Corporate Contact"
+                          width="223" fontWeight="bold" textAlign="center"
+                          fontSize="12" />
+                <mx:VRule y="31" width="9" height="229" horizontalCenter="-33" />
+                <mx:HBox x="0" y="300" width="100%"
+                         height="32" id="hb_tab2" horizontalAlign="center"
+                         verticalAlign="middle">
+                    <mx:Button label="Add Agency" click="addAgencyRecord(event)" />
+                    <mx:Button label="Save Agency" click="saveAgencyRecord(event)" />
+                </mx:HBox>
+                <mx:HRule y="270" width="510" height="2" left="20" />
+                <mx:Label x="2" y="43" text="*"
+                          width="14" color="#F5290D" fontWeight="bold"
+                          fontSize="12" height="20" />
+                <mx:Label x="7" y="73" text="*"
+                          width="14" color="#F5290D" fontWeight="bold"
+                          fontSize="12" height="21" />
+                <mx:Label x="31" y="133" text="*"
+                          width="11" color="#F5290D" fontWeight="bold"
+                          fontSize="12" height="17" />
+                <mx:Label x="26" y="159" text="*"
+                          width="14" color="#F5290D" fontWeight="bold"
+                          fontSize="12" height="20" />
+                <mx:Label x="41" y="193" text="*"
+                          width="11" color="#F5290D" fontWeight="bold"
+                          fontSize="12" height="20" />
+                <mx:Label x="258" y="43" text="*"
+                          width="11" color="#F5290D" fontWeight="bold"
+                          fontSize="12" height="20" />
+                <mx:Label x="29" y="252" text="*"
+                          width="11" color="#F5290D" fontWeight="bold"
+                          fontSize="12" height="20" />
+                <mx:Label x="41" y="250" text="Indicates a required field" width="153" />
+            </mx:Canvas>
+            <mx:Canvas label="Buying Group" width="100%" height="100%"
+                       show="tabSelected()" id="cnv_Group">
+                <ns3:ValidatedTextInput width="125" id="GROUP_ID" y="40"
+                                        x="76" visible="false" dataType="number" />
+                <ns3:ValidatedTextInput width="125" id="GROUP_COMPANY" y="40"
+                                        x="86" dataType="string" maxDataChars="50"
+                                        minDataChars="1" />
+                <ns3:ValidatedTextInput width="141" id="GROUP_ADDRESS1" y="69"
+                                        x="86" dataType="string" maxDataChars="50"
+                                        minDataChars="1" />
+                <ns3:ValidatedTextInput width="142" id="GROUP_ADDRESS2" y="97"
+                                        x="86" dataType="string" maxDataChars="50" />
+                <ns3:ValidatedTextInput width="142" id="GROUP_CITY" y="126"
+                                        x="86" dataType="string" maxDataChars="30"
+                                        minDataChars="1" />
+                <ns3:ValidatedComboBox x="86" y="156" id="GROUP_STATE"
+                                       dataField="DATA" labelField="LABEL" defaultValue="0"
+                                       badIndexes="0" width="159" />
+                <ns3:ValidatedTextInput id="GROUP_ZIP" width="65" x="86"
+                                        y="186" dataType="alphaNumeric" maxDataChars="6"
+                                        minDataChars="1" />
+                <mx:Label y="99" text="Suite " width="68"
+                          fontWeight="bold" textAlign="right" left="8" />
+                <mx:Label y="42" text="Company" width="68"
+                          fontWeight="bold" textAlign="right" left="8" />
+                <mx:Label y="72" text="Address" width="68"
+                          fontWeight="bold" textAlign="right" left="8" />
+                <mx:Label y="132" text="City" width="68"
+                          fontWeight="bold" textAlign="right" left="8" />
+                <mx:Label y="158" text="State" width="68"
+                          fontWeight="bold" textAlign="right" left="8" />
+                <mx:Label y="192" text="Zip" width="68"
+                          fontWeight="bold" textAlign="right" left="8" />
+                <ns3:ValidatedTextInput id="GROUP_PHONE" width="98" x="316"
+                                        y="40" formatter="_phoneFormat" dataType="number"
+                                        maxDataChars="10" minDataChars="1" />
+                <ns3:ValidatedTextInput id="GROUP_EXT" width="60" x="463"
+                                        y="40" dataType="number" maxDataChars="6" />
+                <ns3:ValidatedTextInput id="GROUP_FAX" width="98" x="316"
+                                        y="68" formatter="_phoneFormat" dataType="number"
+                                        maxDataChars="10" />
+                <ns3:ValidatedTextInput id="GROUP_CONTACT" width="213" x="268"
+                                        y="130" maxDataChars="50" upper="true"
+                                        dataType="string" />
+                <ns3:ValidatedTextInput id="GROUP_EMAIL" width="213" x="268"
+                                        y="176" dataType="email" maxDataChars="50"
+                                        lower="true" />
+                <ns3:ValidatedTextInput id="GROUP_WEBADDRESS" width="213" x="268"
+                                        y="226" maxDataChars="50" lower="true"
+                                        dataType="string" />
+                <mx:Label y="156" text="Email Address" width="213"
+                          fontWeight="bold" textAlign="center" left="268" />
+                <mx:Label y="206" text="Website" width="213"
+                          fontWeight="bold" textAlign="center" left="268" />
+                <mx:Label y="108" text="Contact / Manager" width="213"
+                          fontWeight="bold" textAlign="center" left="268" />
+                <mx:Label y="70" text="Fax" width="53"
+                          fontWeight="bold" textAlign="right" left="258" />
+                <mx:Label y="42" text="Phone" width="53"
+                          fontWeight="bold" textAlign="right" left="258" />
+                <mx:Label y="44" text="Ext" width="27"
+                          fontWeight="bold" textAlign="right" left="432" />
+                <mx:Label x="10" y="2" text="Buying Group Address"
+                          width="221" fontWeight="bold" textAlign="center"
+                          fontSize="12" />
+                <mx:Label x="258" y="2" text="Buying Group Contact"
+                          width="223" fontWeight="bold" textAlign="center"
+                          fontSize="12" />
+                <mx:VRule y="31" width="9" height="229" horizontalCenter="-33" />
+                <mx:HBox x="0" y="300" width="100%"
+                         height="32" id="hb_tab3" horizontalAlign="center"
+                         verticalAlign="middle">
+                    <mx:Button label="Add Group" click="addGroupRecord(event)" id="btn_addGroup" />
+                    <mx:Button label="Save Group" click="saveGroupRecord(event)" enabled="false" id="btn_saveGroup" />
+                </mx:HBox>
+                <mx:HRule y="270" width="510" height="2" left="20" />
+                <mx:Label x="2" y="43" text="*"
+                          width="14" color="#F5290D" fontWeight="bold"
+                          fontSize="12" height="20" />
+                <mx:Label x="7" y="73" text="*"
+                          width="14" color="#F5290D" fontWeight="bold"
+                          fontSize="12" height="21" />
+                <mx:Label x="31" y="133" text="*"
+                          width="11" color="#F5290D" fontWeight="bold"
+                          fontSize="12" height="17" />
+                <mx:Label x="26" y="159" text="*"
+                          width="14" color="#F5290D" fontWeight="bold"
+                          fontSize="12" height="20" />
+                <mx:Label x="41" y="193" text="*"
+                          width="11" color="#F5290D" fontWeight="bold"
+                          fontSize="12" height="20" />
+                <mx:Label x="258" y="43" text="*"
+                          width="11" color="#F5290D" fontWeight="bold"
+                          fontSize="12" height="20" />
+                <mx:Label x="29" y="252" text="*"
+                          width="11" color="#F5290D" fontWeight="bold"
+                          fontSize="12" height="20" />
+                <mx:Label x="41" y="250" text="Indicates a required field" width="153" />
+            </mx:Canvas>
+        </mx:TabNavigator>
+        <mx:HRule y="67" width="510" height="2" left="20" />
+    </ns1:SuperPanel>
+    <mx:ArrayCollection id="acState">
+        <mx:Object DATA="00" LABEL="Select State" />
+        <mx:Object DATA="AK" LABEL="Alaska" />
+        <mx:Object DATA="AL" LABEL="Alabama" />
+        <mx:Object DATA="AR" LABEL="Arkansas" />
+        <mx:Object DATA="AZ" LABEL="Arizona" />
+        <mx:Object DATA="CA" LABEL="California" />
+        <mx:Object DATA="CO" LABEL="Colorado" />
+        <mx:Object DATA="CT" LABEL="Connecticut" />
+        <mx:Object DATA="DE" LABEL="Delaware" />
+        <mx:Object DATA="DC" LABEL="District of Columbia" />
+        <mx:Object DATA="FL" LABEL="Florida" />
+        <mx:Object DATA="GA" LABEL="Georgia" />
+        <mx:Object DATA="HI" LABEL="Hawaii" />
+        <mx:Object DATA="IA" LABEL="Iowa" />
+        <mx:Object DATA="ID" LABEL="Idaho" />
+        <mx:Object DATA="IL" LABEL="Illinois" />
+        <mx:Object DATA="IN" LABEL="Indiana" />
+        <mx:Object DATA="KS" LABEL="Kansas" />
+        <mx:Object DATA="KY" LABEL="Kentucky" />
+        <mx:Object DATA="LA" LABEL="Louisiana" />
+        <mx:Object DATA="MA" LABEL="Massachusetts" />
+        <mx:Object DATA="MD" LABEL="Maryland" />
+        <mx:Object DATA="ME" LABEL="Maine" />
+        <mx:Object DATA="MI" LABEL="Michigan" />
+        <mx:Object DATA="MN" LABEL="Minnesota" />
+        <mx:Object DATA="MO" LABEL="Missouri" />
+        <mx:Object DATA="MS" LABEL="Mississippi" />
+        <mx:Object DATA="MT" LABEL="Montana" />
+        <mx:Object DATA="NE" LABEL="Nebraska" />
+        <mx:Object DATA="NC" LABEL="North Carolina" />
+        <mx:Object DATA="ND" LABEL="North Dakota" />
+        <mx:Object DATA="NH" LABEL="New Hampshire" />
+        <mx:Object DATA="NJ" LABEL="New Jersey" />
+        <mx:Object DATA="NM" LABEL="New Mexico" />
+        <mx:Object DATA="NY" LABEL="New York" />
+        <mx:Object DATA="NV" LABEL="Nevada" />
+        <mx:Object DATA="OH" LABEL="Ohio" />
+        <mx:Object DATA="OK" LABEL="Oklahoma" />
+        <mx:Object DATA="OR" LABEL="Oregon" />
+        <mx:Object DATA="PA" LABEL="Pennsylvania" />
+        <mx:Object DATA="PR" LABEL="Puerto Rico" />
+        <mx:Object DATA="RI" LABEL="Rhode Island" />
+        <mx:Object DATA="SC" LABEL="South Carolina" />
+        <mx:Object DATA="SD" LABEL="South Dakota" />
+        <mx:Object DATA="TN" LABEL="Tennessee" />
+        <mx:Object DATA="TX" LABEL="Texas" />
+        <mx:Object DATA="UT" LABEL="Utah" />
+        <mx:Object DATA="VA" LABEL="Virginia" />
+        <mx:Object DATA="VI" LABEL="Virgin Islands" />
+        <mx:Object DATA="VT" LABEL="Vermont" />
+        <mx:Object DATA="WA" LABEL="Washington" />
+        <mx:Object DATA="WI" LABEL="Wisconsin" />
+        <mx:Object DATA="WV" LABEL="West Virginia" />
+        <mx:Object DATA="WY" LABEL="Wyoming" />
+        <mx:Object DATA="AA" LABEL="AA" />
+        <mx:Object DATA="AE" LABEL="AE" />
+        <mx:Object DATA="AP" LABEL="AP" />
+    </mx:ArrayCollection>
+</mx:Module>

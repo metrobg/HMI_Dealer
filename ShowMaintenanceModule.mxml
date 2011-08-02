@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Module xmlns:mx="http://www.adobe.com/2006/mxml" layout="absolute"  xmlns:ns1="Panels.*"
+	 creationComplete="init()">
+	 
+	<mx:Script>
+	<![CDATA[
+		import mx.controls.Alert;
+		import mx.collections.ArrayCollection;	
+		import mx.collections.ICollectionView;
+		import com.metrobg.Icons.Images;
+		
+		[Bindable] private var showAC:ArrayCollection;
+		[Bindable] public var vSourceId:String = "0";
+		[Bindable] private var vMode:String = "Update";
+		
+		private function init():void {
+			 this.moveToFront();
+			showAC = new ArrayCollection();
+			add_btn.toolTip = "Enter the show name in the field above and click 'Add'";
+			delete_btn.toolTip = "Select the show form the list above and click 'Delete' to remove the show";
+			save_btn.toolTip = "Select the show from the list above, make desired changes and click 'Save' to update the record";
+		}
+		
+private function getResultOk(r:Number,evt:Event):void 
+{
+	var recordCount:Number;
+	switch (r)
+	{
+		case 1:
+	 			 showAC = getShows.lastResult.showlist.record;
+	 			 showAC.removeItemAt(0);
+			     break;
+	  case 2:
+	  			var status:String = updateSource.lastResult.root.status;
+	  			
+	  			if(status == "2") {
+	  				mx.controls.Alert.show("Update failed","Error");
+	  			}  else {
+	  				this.getShows.send();
+	  			}
+	  			
+	}
+}
+private function gridItemSelected(event:Event):void {
+	    vSourceId = this.showLocationGrid.selectedItem.data;
+	    this.description_fld.text = showLocationGrid.selectedItem.label;
+	
+}
+private function buttonHandler(value:String):void {
+	          vMode = value;
+	          if(value == 'Add') {
+	          	 this.vSourceId = "0";
+	          }
+	       this.updateSource.send();   	  	          
+}	
+
+ 
+
+private function closeThisModule():void {
+	parentApplication.removeModule(this.owner.name);
+}
+
+private function moveToFront():void
+{
+   // move the shape to the front by moving it to the front-most
+   // index (which is always numChildren - 1)
+	if (this)
+		if (this.owner)
+			if (this.owner.name)
+				if (parentApplication)
+			   		parentApplication.setChildIndex(parentApplication.getChildByName(this.owner.name), 
+						parentApplication.numChildren - 1);
+}		
+	]]>
+</mx:Script>
+
+<mx:HTTPService id="getShows"     
+    url="http://www.heritagemfg.com/console/flex/queries/getShows.cfm"
+    useProxy="false"  showBusyCursor="true"
+    result="getResultOk(1,event)"
+    fault="getResultOk(999,event)">
+  <mx:request>
+     <random>{parentDocument.makeRandom()}</random>  	                            
+   </mx:request>   
+</mx:HTTPService>	 
+
+<mx:HTTPService id="updateSource"     
+    url="http://www.heritagemfg.com/console/flex/queries/updateSource.cfm"
+    useProxy="false"  showBusyCursor="true" method="POST"
+    result="getResultOk(2,event)"
+    fault="getResultOk(999,event)">
+  <mx:request>
+     <random>{parentDocument.makeRandom()}</random>
+     <location>{this.description_fld.text}</location>  	
+     <id>{vSourceId}</id>
+     <mode>{this.vMode}</mode>
+   </mx:request>   
+</mx:HTTPService>	 	 
+	 <ns1:SuperPanel x="0" y="0" width="350" height="600" layout="absolute" title="Show Maintenance"
+		showControls="true" enableResize="false" exitFunction="parentApplication.removeModule" exitFunctionValue="{this.owner.name}" 
+		 click="moveToFront();" id="superpanel1">
+		
+		<!--<mx:VBox width="100%" height="100%">-->
+		<mx:Panel width="95%" height="390" layout="absolute" title="Show Listing" id="panel1"  paddingLeft="10" paddingBottom="10" paddingTop="10"
+			 defaultButton="{load_btn}" left="10" top="10"> 
+		<mx:DataGrid  left="10" y="10" width="90%" height="261" id="showLocationGrid" dataProvider="{showAC}" itemClick="gridItemSelected(event)">
+			<mx:columns>
+			 <mx:DataGridColumn headerText="Show Location / Name" dataField="label"/>
+			</mx:columns>
+		</mx:DataGrid>
+		<mx:ControlBar id="controlbar2" horizontalAlign="center">
+		<mx:Button x="147" y="276" label="Load" id="load_btn" click="getShows.send()" icon="{Images.listIcon}"
+			       useHandCursor="true" buttonMode="true" toolTip="Click here to List All Shows"/>
+		<mx:Button label="Close" icon="{Images.closeIcon}" id="close_btn" click="{this.closeThisModule()}"
+			       toolTip="Click here to close this window" useHandCursor="true" buttonMode="true" fontWeight="bold"/>
+		</mx:ControlBar>
+	</mx:Panel>
+	
+	      <!--A D D  /  E D I T   P A N E L -->
+	<mx:Panel y="416" width="95%" height="144" layout="absolute"  verticalScrollPolicy="off" defaultButton="{save_btn}"
+		title="Update Show " id="modelMaint" visible="true" horizontalScrollPolicy="off" horizontalAlign="center" left="10">
+			 <mx:HBox width="90%" height="58" horizontalAlign="center" verticalAlign="middle" x="12" y="4">
+			 <mx:TextInput id="description_fld" maxChars="20" text="{showLocationGrid.selectedItem.description}" width="164" x="21" y="10"/>	 
+			<mx:Text x="62" y="251" text="{showLocationGrid.selectedItem.id}" width="10" id="id_fld" visible="false"/>
+			 </mx:HBox>
+			 
+       <mx:ControlBar id="controlbar1" horizontalAlign="center">
+		<mx:Button label="Save" id="save_btn" icon="{Images.saveIcon}" click="buttonHandler('Save')" 
+			       useHandCursor="true" buttonMode="true" labelPlacement="right" fontWeight="bold"/>
+		<mx:Button label="Add" id="add_btn" click="buttonHandler('Add')"
+			       useHandCursor="true" buttonMode="true" icon="{Images.addIcon}" fontWeight="bold"/>
+		<mx:Button label="Delete" id="delete_btn" icon="{Images.removeIcon}"
+			       click="buttonHandler('Delete')"  useHandCursor="true" buttonMode="true"  fontWeight="bold"/>	
+	                
+		</mx:ControlBar>
+	</mx:Panel>  
+		
+		
+		
+		<!--  </mx:VBox>-->
+			 </ns1:SuperPanel> 
+
+
+
+</mx:Module>					

@@ -1,0 +1,57 @@
+<?xml version="1.0"?>
+<mx:TitleWindow xmlns:mx="http://www.adobe.com/2006/mxml" creationComplete="doInit();" title="Matching Customers"
+	 xmlns:local="*" close="PopUpManager.removePopUp(this);">
+    <mx:Script>
+        <![CDATA[
+        	import mx.core.IFlexModule;
+        	import mx.modules.IModuleInfo;
+        	import mx.containers.Grid;
+        	import mx.collections.ArrayCollection;
+            import mx.managers.PopUpManager;
+            import mx.controls.DataGrid;
+            import mx.events.ListEvent;
+            import mx.events.CloseEvent;
+            import com.metrobg.Classes.Client;
+          
+            
+            [Bindable]
+           public var ac:ArrayCollection;         
+           public var targetAC:ArrayCollection;
+           [Bindable]  
+           public var selectedClient:Client;
+           
+           
+           private function addCustomer(event:ListEvent):void {
+           		 
+           	    selectedClient.id = theGrid.selectedItem.id;
+           	    selectedClient.name = theGrid.selectedItem.name;
+				selectedClient.address = theGrid.selectedItem.address;				
+           	    selectedClient.suite = theGrid.selectedItem.suite
+				selectedClient.suite = theGrid.selectedItem.suite;
+				selectedClient.city = theGrid.selectedItem.city;
+				selectedClient.state = theGrid.selectedItem.state;
+				selectedClient.zipcode = theGrid.selectedItem.zipcode;
+				selectedClient.phone = theGrid.selectedItem.phone;
+				this.dispatchEvent(new CloseEvent("close"));
+				PopUpManager.removePopUp(this);      // client selected close this window
+				
+			}
+            
+            private function doInit():void {
+                PopUpManager.centerPopUp(this);             
+            }
+        ]]>
+    </mx:Script>
+    <mx:DataGrid width="500" id="theGrid" doubleClickEnabled="true" dataProvider="{ac}"
+								   itemDoubleClick="addCustomer(event);" visible="true" x="32" y="322">
+								<mx:columns>
+									<mx:DataGridColumn headerText="ID" dataField="id" visible="false" width="20"/>
+									<mx:DataGridColumn headerText="Name" dataField="name" width="125"/>
+									<mx:DataGridColumn headerText="Address" dataField="address"/> 
+									<mx:DataGridColumn headerText="City" dataField="city" width="100"/>
+									<mx:DataGridColumn headerText="State" dataField="state" width="25"/>
+								</mx:columns>
+							</mx:DataGrid>
+    	
+</mx:TitleWindow>
+ 

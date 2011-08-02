@@ -1,0 +1,58 @@
+<mx:Module xmlns:mx="http://www.adobe.com/2006/mxml" layout="absolute" xmlns:ns1="Panels.*"
+           xmlns:ns2="components.*" creationComplete="init()" xmlns:ns3="com.ace.Input.*"
+           xmlns:ns4="com.metrobg.Components.*" xmlns:ns5="com.tools.footerDataGrid.*">
+    <mx:Script source="Warranty.as" />
+    <ns1:SuperPanel y="0" height="421" layout="absolute"
+                    title="Warranty Inquiry" showControls="true" enableResize="false"
+                    exitFunction="parentApplication.removeModule" exitFunctionValue="{this.owner.name}" click="moveToFront();"
+                    id="superpanel1" width="574" x="0">
+        <mx:Canvas y="0" height="100%" width="100%" x="0">
+            <!-- <mx:DataGrid height="231" id="dgResult" top="10"
+                 left="10" right="10">
+                 <mx:columns>
+                 <mx:DataGridColumn headerText="Serial No." dataField="SERIALNO" width="75" />
+                 <mx:DataGridColumn headerText="Date" dataField="PURCHASE_DATE" width="75" textAlign="center" />
+                 <mx:DataGridColumn headerText="Owner" dataField="NAME" />
+                 <mx:DataGridColumn headerText="City" dataField="CITY" width="100" />
+                 <mx:DataGridColumn headerText="State" dataField="STATE" width="50" textAlign="center" />
+                 </mx:columns>
+                 </mx:DataGrid>-->
+            <mx:TextInput x="203" y="318" id="fldSearch" maxChars="15" />
+            <mx:Label x="121" y="320" text="Search"
+                      width="73" fontWeight="bold" textAlign="right" />
+            <mx:RadioButtonGroup id="searchField" change="searchFieldChanged(event)" itemClick="searchFieldChanged(event)" />
+            <mx:RadioButton x="203" y="288" label="Serial No."
+                            groupName="searchField" fontWeight="bold" value="SERIALNO"
+                            click="searchFieldChanged(event)" selected="true" />
+            <mx:RadioButton x="306" y="288" label="Name"
+                            groupName="searchField" fontWeight="bold" value="NAME"
+                            click="searchFieldChanged(event)" />
+            <ns5:FooterDataGrid height="270" id="dgResult" top="15"
+                                left="10" right="10">
+                <ns5:columns>
+                    <mx:DataGridColumn headerText="Serial No." dataField="SERIALNO" width="75" />
+                    <mx:DataGridColumn headerText="Date" dataField="PURCHASE_DATE" width="75" textAlign="center" />
+                    <mx:DataGridColumn headerText="Owner" dataField="NAME" />
+                    <mx:DataGridColumn headerText="City" dataField="CITY" width="100" />
+                    <mx:DataGridColumn headerText="State" dataField="STATE" width="50" textAlign="center" />
+                </ns5:columns>
+                <ns5:footer>
+                    <ns5:SummaryFooter>
+                        <ns5:columns>
+                            <ns5:SummaryColumn label="Records:" />
+                            <ns5:SummaryColumn operation='count' id="RC" />
+                        </ns5:columns>
+                    </ns5:SummaryFooter>
+                </ns5:footer>
+            </ns5:FooterDataGrid>
+        </mx:Canvas>
+        <mx:ControlBar height="42" x="0" y="558" horizontalAlign="center">
+            <mx:Spacer width="17" height="6" />
+            <mx:Button label="Find" id="btnFind" tabIndex="3" click="buttonHandler(event)" />
+            <mx:Spacer height="2" width="10" />
+            <mx:Button label="Close" id="btnClose" tabIndex="4"
+                       toolTip="Click here to close this window" useHandCursor="true" buttonMode="true"
+                       click="closeModule()" />
+        </mx:ControlBar>
+    </ns1:SuperPanel>
+</mx:Module>

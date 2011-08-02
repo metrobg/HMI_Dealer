@@ -1,0 +1,130 @@
+<?xml version="1.0"?>
+<mx:TitleWindow xmlns:mx="http://www.adobe.com/2006/mxml" creationComplete="doInit();" title="All Repair Codes" width="614" height="398">
+    <mx:Script>
+        <![CDATA[
+        
+        // this component is called by WorkOrder.mxml
+        
+        	import mx.containers.Grid;
+        	import mx.collections.ArrayCollection;
+        	import mx.collections.IViewCursor;
+        	import mx.controls.Alert;
+
+            import mx.managers.PopUpManager;
+            import mx.controls.DataGrid;
+            import mx.events.ListEvent;
+            import mx.events.CloseEvent;
+             
+            [Bindable]
+           public var ac:ArrayCollection;         
+           public var targetAC:ArrayCollection;
+           public var parentModule:Object;
+           
+           private var serialNumberWindow:SerialNumberWindow;
+           
+			private function doInit():void {
+				searchText.setFocus();
+				searchText.text = '';
+			    PopUpManager.centerPopUp(this);               
+			}
+           private function addCode(event:ListEvent):void {
+           	     if( isOnWorkOrder(theGrid.selectedItem)) {
+           	     	Alert.show("This item is already on the Work Order","Unable to Add");
+                    return;          	     	
+           	     }
+           		if( theGrid.selectedItem.code == "MISC 400") {
+           	  		openSerialNumberWindow();
+           	  	}      else {
+				targetAC.addItemAt(theGrid.selectedItem,0);
+				targetAC.refresh();				
+				parentModule.calculateTotal();
+           	  	}
+			}
+ 	
+
+
+   private function filterFirst(row:Object):Boolean {
+	if(searchText.length == 0){
+			return true;
+	}
+
+	var columnName:String;
+	var columnValue:String;
+	var keywords:Array = searchText.text.split(" ");
+	var wordFound:Boolean;
+	
+	// Loop Over Words
+	for(var word:int = 0; word < keywords.length; word++) {
+		wordFound = false;
+		// Loop Over Columns
+		for( var column:int = 0; column < theGrid.columnCount; column++){
+			columnName = theGrid.columns[column].dataField;
+			if (row[columnName] != null) {
+				columnValue = row[columnName];
+				columnValue = columnValue.toLowerCase();
+				if(columnValue.search(keywords[word].toLowerCase()) >= 0 ) {
+					wordFound = true;
+					break;
+				} 
+			}
+		}
+		if (!wordFound) return false;
+	}
+	return true;
+}
+
+		private function filterPhrase():void{
+				ac.filterFunction = filterFirst;
+				ac.refresh();
+		}          
+
+	private function openSerialNumberWindow():void {
+		serialNumberWindow = SerialNumberWindow(PopUpManager.createPopUp(this,SerialNumberWindow,true));
+		serialNumberWindow.showCloseButton = true;
+		serialNumberWindow.addEventListener("close",closeSerialNumberWindow);
+	}
+
+	private function closeSerialNumberWindow(event:CloseEvent):void {
+	  	if(event.currentTarget.altSerial != null ) {
+	  		
+	  	   if(event.currentTarget.altSerial.length > 3)  {	  		
+			var altSerialNumber:String = event.currentTarget.altSerial;
+			parentModule.altserialno_fld.text = altSerialNumber;  // only add the code if we have a decent string
+			targetAC.addItemAt(theGrid.selectedItem,0);
+			targetAC.refresh();				
+			parentModule.calculateTotal();
+			} 
+	  	}
+	PopUpManager.removePopUp(serialNumberWindow);
+}
+	private function isOnWorkOrder(item:Object):Boolean {
+		var addToWorkOrder:Boolean = false;
+		var cursor:IViewCursor; 
+		 	
+		cursor = targetAC.createCursor();		 		 			  
+	         while(!cursor.afterLast) {        	     
+	         	    if(cursor.current.code == item.code ) {        	    	 
+	         	    	addToWorkOrder = true;      	    	         	    	 
+	               }         
+	         	    cursor.moveNext();
+	     }	
+	                 return addToWorkOrder;
+	}
+
+        ]]>
+    </mx:Script>
+    <mx:Canvas width="100%" height="100%">   	   
+    <mx:DataGrid width="100%" id="theGrid" doubleClickEnabled="true" dataProvider="{ac}"
+								   itemDoubleClick="addCode(event);" visible="true" x="0" y="0" height="90%">
+								<mx:columns>
+									<mx:DataGridColumn headerText="ID" dataField="id" visible="false" width="20"/>
+									<mx:DataGridColumn headerText="Code" dataField="code" width="75"/>
+									<mx:DataGridColumn headerText="Description" dataField="description"/> 
+									<mx:DataGridColumn headerText="Price" dataField="price" visible="false"/>
+								</mx:columns>
+							</mx:DataGrid>
+    <mx:TextInput x="10" y="323" width="193" id="searchText" change="filterPhrase()"/>
+    <mx:Button x="242" y="323" label="Clear" id="clear_btn" click="{searchText.text = ''};ac.refresh()"/>
+  </mx:Canvas>  	
+</mx:TitleWindow>
+ 

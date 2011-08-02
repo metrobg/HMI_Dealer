@@ -1,0 +1,362 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:TitleWindow xmlns:mx="http://www.adobe.com/2006/mxml" layout="absolute" width="440" height="460"
+	   x="200" y="150" creationComplete="init()" title="Show Attendance">
+<mx:Script> 
+	<![CDATA[      
+		//import Classes.Dealer;
+		import com.Heritage.DEALER;
+		import mx.collections.ArrayCollection;
+		import Classes.Inventory;
+		import mx.controls.Alert;
+		import com.metrobg.Icons.Images;
+		import mx.rpc.events.*;
+		import mx.rpc.soap.LoadEvent;
+		import mx.rpc.soap.WebService;
+		import mx.utils.ObjectUtil;
+
+
+		public var showAC:ArrayCollection;
+		public var currentDealer:DEALER;
+		[Bindable] private var inventory:Object;
+		
+		public var refreshParent:Boolean = false;
+	 	[Bindable] private var	vshow_id:String;
+	    [Bindable] private var vdate_attended:String;
+	    [Bindable] private var vshowKey:String = "0";
+		 
+		
+		[Bindable] private var vMode:String = "Update";
+		private var messageText:String;
+		public var security:Number = 0;
+		
+		private function init():void {
+			lcl.loadShowComboBox();
+			title = "Mode: " + vMode;
+			vid_lab.text = String(currentDealer.ID);
+			message_lab.text = messageText;
+			enableButtons(4);
+			addShow_btn.toolTip =           "To Add a show:\n Select the show Location and Month from the Combo Boxes above then click the 'Add Show' Button";
+			deleteShow_btn.toolTip =     	"To Delete a show:\n Select the show Location and Month from the Grid on the left, then click the 'Delete Show' Button";
+			updateStock_btn.toolTip = 		"To Update Inventory:\n Select show the Location and Month from the Grid  on the left, then click the 'Update Stock' Button";
+		    lcl.loadShowsAttended();
+		    inventory = new Object();
+		    
+		    var currentYear:Number = new Date().getFullYear();
+		    var tAC:ArrayCollection = new ArrayCollection();
+		    for (var i:int = 0;i < 4;i++) {
+		    	tAC.addItem({label: currentYear - i,data: currentYear - i});
+		    }
+		    tAC.addItemAt({label: "Select",data:0},0);
+		    cbxYear.dataProvider = tAC;
+		    cbxYear.selectedIndex = 0;		    
+		}
+		
+		 
+private function reset():void {
+	setMode('Update');
+	show_cbx.selectedIndex = 0;
+	vmonth.selectedIndex = 0;
+	this.enableButtons(4);
+	this.showGrid.selectedIndex = -1;
+}			 
+	 
+		private function setMode(value:String):void {
+			this.vMode = value;
+			this.title = "Mode: " + vMode;
+		}		
+
+		
+		private function gridItemSelected():void {
+	 				if(this.showGrid.selectedIndex <0) {
+	 					return;
+	 				}else {
+	 					inventory = showGrid.selectedItem;
+	 					this.vshowKey = showGrid.selectedItem.ATTENDANCE_ID;
+	 					if(showGrid.selectedItem.location != "Warranty Card") {
+	 						enableButtons(2);
+	 						vtotal_guns.text =   showGrid.selectedItem.TOTAL_GUNS;
+	 						vlong_guns.text =    showGrid.selectedItem.LONG_GUNS;
+	 						vhand_guns.text =    showGrid.selectedItem.HAND_GUNS;
+	 						vrough_riders.text = showGrid.selectedItem.ROUGH_RIDERS;
+	 						message_lab.text =   showGrid.selectedItem.LOCATION + "   " +
+	 					                         showGrid.selectedItem.DATE_ATTENDED;
+	 				   } 
+	 				}
+	 	}
+	 	
+private function saveRecord():void {	
+	 if(vMode == "Add" || vMode == "Delete") {    
+	   updateDealerShow.send();
+	    
+ 	} else {
+     	updateDealerStock.send();
+ 	}   	
+}
+
+private function enableButtons(action:int):void {
+	  if(action == 1) {
+	  	//trace("enable buttons 1");
+		 if((vmonth.selectedIndex > 0) && (show_cbx.selectedIndex > 0)) {
+	 			addShow_btn.enabled = true;
+	 			deleteShow_btn.enabled = false
+	 			updateStock_btn.enabled = false;
+	 			setMode('Add');
+	 			this.updateStatus(false);    // clear the status line		 			
+		 		}   else {
+		 			addShow_btn.enabled = false;
+		 		}  	
+	  }
+	     if(action == 2) {            // show selected in grid
+	     	//trace("enable buttons 2");
+	     	this.updateStatus(false);    // clear the status line
+	     	addShow_btn.enabled = false;
+	     	deleteShow_btn.enabled = true;
+	     	updateStock_btn.enabled = true;     	 
+	     	setMode('Delete');
+	     	enableButtons(8);
+	     }
+	     
+	     if(action == 4) { 					// reset all buttons
+	     	//trace("enable buttons 4");
+	     	addShow_btn.enabled = false;
+	     	deleteShow_btn.enabled = false;
+	     	updateStock_btn.enabled = false;
+	     }
+	     if(action == 8) {
+	     	show_cbx.selectedIndex = 0;
+	     	vmonth.selectedIndex = 0;
+	     	//trace("enable buttons 8");
+	     } 
+	        if(security < 3) 
+	           updateStock_btn.enabled = false;          
+	     
+}	
+
+private function updateStatus(value:Boolean):void {
+	  if(value) {
+	    // this.show_pnl.status = "Record Saved";
+	     refreshParent = true;
+	  } else {
+	  //	this.show_pnl.status = "";
+	  }
+}
+private function showSelected():void {
+	 				vshow_id = show_cbx.selectedItem.DATA;
+	 				enableButtons(1);
+	}
+	 	 
+	 	private function dateSelected():void {
+	 		var currentYear:Number = new Date().getFullYear();
+	 		var currentMonth:Number = new Date().getMonth() + 1;
+	 		 
+	 		/* if(vmonth.selectedIndex > currentMonth) {  	 		        
+	 			currentYear = currentYear -1;
+	 			vdate_attended = "1-" + vmonth.selectedItem.data + "-" + currentYear;
+	 				} else {
+	 		  			vdate_attended = "1-" + vmonth.selectedItem.data + "-" + currentYear;
+	 		}  */
+	 		vdate_attended = "1-" + vmonth.selectedItem.data + "-" + cbxYear.selectedItem.data;
+				if ((vmonth.selectedIndex > 0) && cbxYear.selectedIndex > 0) {
+					enableButtons(1);
+				}
+	 	}
+	 	
+       private function getResultOk(r:Number,event:Event):void { 
+       	switch (r) {
+       
+       	     case 1:
+	 			 if(updateDealerStock.lastResult.root.status == "0") {
+	 			 	// trace("update dealer stock called");
+	 			 	 Alert.show("Problem updating Dealer Stock","Error");
+		 			 } else {
+		 			 	updateStatus(true);
+		 			 	lcl.loadShowsAttended();
+		 			 }		 		
+				     break;	
+		case 2:
+ 			 if(updateDealerShow.lastResult.root.status == "1") {
+ 			 	 updateStatus(true);			 	
+ 			 	this.vmonth.selectedIndex = 0;
+ 			 	this.show_cbx.selectedIndex = 0;
+ 			 	lcl.loadShowsAttended();		 		 	  			 	
+ 			 }  else {
+ 			 	 Alert.show("Problem updating Dealer Attendance","Error");
+ 			 }
+ 		
+		          	}		          			       		         		     		            	 
+        	      this.enableButtons(4);  
+        
+    }
+    /*   web service result handlers  */
+    private function fillShowComboBox_result(evt:ResultEvent):void {
+    	       var tmpAC:ArrayCollection;
+    	       tmpAC = ArrayCollection(evt.result);
+    	       tmpAC.addItemAt({LABEL: "Select Show", DATA: 0},0);
+    	       show_cbx.labelField = "LABEL";
+	           this.show_cbx.dataProvider = tmpAC;               
+	        }
+
+	private function fillShowComboBox_fault(evt:FaultEvent):void {
+	    Alert.show("Error while loading Data","Stop");	     
+	}
+	
+	private function showsAttended_result(evt:ResultEvent):void {
+		        showAC = ArrayCollection(evt.result);
+                this.showGrid.dataProvider = showAC;               
+            }
+
+            private function showsAttended_fault(evt:FaultEvent):void {
+                Alert.show(evt.type.toString());
+                 
+            }
+     private function updateRecord_result(evt:ResultEvent):void {
+                Alert.show("result " + evt.result.toString(),"done");               
+            }
+
+            private function updateRecord_fault(evt:FaultEvent):void {
+                Alert.show(evt.type.toString());
+                 
+            }
+            
+	]]>
+</mx:Script>
+	<mx:Canvas width="95%" height="95%"  id="show_pnl" left="10" top="10">
+		 
+		 <mx:ComboBox y="8" id="show_cbx" close="showSelected()" width="141" left="70"/> 
+		<mx:ComboBox y="35" id="vmonth" close="dateSelected()" width="141" left="70">
+			<mx:dataProvider>
+			<mx:ArrayCollection id="MonthList">	
+				<mx:Object data="00" label="Select Month"/> 	
+				<mx:Object data="JAN" label="January"/>	
+				<mx:Object data="FEB" label="February"/>	
+				<mx:Object data="MAR" label="March"/>
+				<mx:Object data="APR" label="April"/>
+				<mx:Object data="MAY" label="May"/>
+				<mx:Object data="JUN" label="June"/>
+				<mx:Object data="JUL" label="July"/>
+				<mx:Object data="AUG" label="August"/>
+				<mx:Object data="SEP" label="September"/>
+				<mx:Object data="OCT" label="October"/>
+				<mx:Object data="NOV" label="November"/>
+				<mx:Object data="DEC" label="December"/>	
+			</mx:ArrayCollection>
+			</mx:dataProvider>	
+		</mx:ComboBox>
+		<mx:ComboBox y="35" id="cbxYear" width="100" right="27" change="dateSelected()">
+			<mx:dataProvider>
+			<mx:ArrayCollection id="MonthList0">	
+				<mx:Object data="00" label="Select Month"/> 	
+				<mx:Object data="JAN" label="January"/>	
+				<mx:Object data="FEB" label="February"/>	
+				<mx:Object data="MAR" label="March"/>
+				<mx:Object data="APR" label="April"/>
+				<mx:Object data="MAY" label="May"/>
+				<mx:Object data="JUN" label="June"/>
+				<mx:Object data="JUL" label="July"/>
+				<mx:Object data="AUG" label="August"/>
+				<mx:Object data="SEP" label="September"/>
+				<mx:Object data="OCT" label="October"/>
+				<mx:Object data="NOV" label="November"/>
+				<mx:Object data="DEC" label="December"/>	
+			</mx:ArrayCollection>
+			</mx:dataProvider>	
+		</mx:ComboBox>
+		<mx:TextInput x="114" y="244" width="56" maxChars="5" id="vtotal_guns" text="0"/>
+		<mx:TextInput y="244" width="56" maxChars="5" id="vlong_guns" right="18" text="0"/>
+		<mx:TextInput x="114" y="270" width="56" maxChars="5" id="vhand_guns" text="0"/>
+		<mx:TextInput y="270" width="56" maxChars="5" id="vrough_riders" right="18" text="0"/>
+		<mx:Label x="8" y="246" text="Total Guns" fontWeight="bold" width="93" textAlign="right"/>
+		<mx:Label x="-1" y="8" text="Attended" fontWeight="bold" width="68" textAlign="right"/>
+		<mx:Label x="7" y="20" text="Show " fontWeight="bold" width="41" textAlign="right"/>
+		<mx:Label x="6" y="37" text="Month" fontWeight="bold" width="48" textAlign="right"/>
+		<mx:Label x="198" y="246" text="Long Guns" fontWeight="bold" width="93" textAlign="right"/>
+		<mx:Label x="8" y="274" text="Hand Guns" fontWeight="bold" width="93" textAlign="right"/>
+		<mx:Label x="198" y="274" text="Rough Riders" fontWeight="bold" width="93" textAlign="right"/>
+		<mx:HRule x="0" y="188" width="100%"/>
+		<mx:HBox width="100%" height="27" horizontalAlign="center" x="0" y="318">
+			<mx:Button label="Update Stock" click="setMode('Update');saveRecord()" id="updateStock_btn" icon="{Images.updateIcon}"/>
+		</mx:HBox>
+		<mx:DataGrid x="10" y="63" height="110" width="231" id="showGrid" click="gridItemSelected()">
+			<mx:columns>
+				<mx:DataGridColumn headerText="Location" dataField="LOCATION"/>
+				<mx:DataGridColumn headerText="Date" dataField="DATE_ATTENDED" textAlign="center"/>
+			</mx:columns>
+		</mx:DataGrid>  
+		<mx:Button label="Cancel" y="150" width="100" click="reset()" toolTip="Cancel changes and start over" right="27" id="cancelUpdate_btn" icon="{Images.cancelIcon}"/>
+		<mx:Button label="Delete Show" y="125" width="100" click="saveRecord()"
+			 toolTip="To delete a show, select the show in the grid, click Delete then click Save" right="27" id="deleteShow_btn" icon="{Images.removeIcon}"/>
+		<mx:Button label="Add Show" y="100" width="100" click="saveRecord()"
+			 toolTip="To add a show click the Add button, then select the show and date from the drop down menus, then click Save" right="27" id="addShow_btn" icon="{Images.addIcon}"/>
+		<mx:Label x="305" y="10" width="57" id="vid_lab" text="9999" fontWeight="bold" textAlign="right"/>
+		<mx:Label x="0" y="197" width="100%" fontWeight="bold" textAlign="center" fontSize="12" text="Dealer Stocking Levels:"/>
+		<mx:Label x="0" y="215" width="100%" fontWeight="bold" textAlign="center" fontSize="10" id="message_lab"/>
+		<mx:Label x="220" y="37" text="Year" fontWeight="bold" width="48" textAlign="right"/>
+		<!--<mx:Button x="249" y="8" icon="{Images.refreshIcon}" click="this.loadShow.send()" toolTip="Click here to reload the list"/>-->
+	</mx:Canvas>
+
+
+<mx:HTTPService id="updateDealerStock"     
+    url="http://www.heritagemfg.com/console/flex/queries/updateDealerStock.cfm"
+    useProxy="false"  showBusyCursor="true" method="POST"
+    result="getResultOk(1,event)"
+    fault="getResultOk(999,event)">
+  <mx:request>
+   <random>{parentDocument.makeRandom()}</random> 
+   <dealer_id>{vid_lab.text}</dealer_id>
+   <show_id>{vshowKey}</show_id>
+   <total_guns>{vtotal_guns.text}</total_guns>
+   <long_guns>{this.vlong_guns.text}</long_guns>
+   <hand_guns>{this.vhand_guns.text}</hand_guns>
+   <rough_riders>{this.vrough_riders.text}</rough_riders>
+   <mode>{vMode}</mode>   	                            
+   </mx:request>   
+</mx:HTTPService> 
+ 
+
+<mx:HTTPService id="updateDealerShow"     
+    url="http://www.heritagemfg.com/console/flex/queries/updateDealerShow.cfm"
+    useProxy="false"  showBusyCursor="true" method="POST"
+    result="getResultOk(2,event)"
+    fault="getResultOk(999,event)">
+  <mx:request>
+<random>{parentDocument.makeRandom()}</random> 
+	<id>{vshowKey}</id>  
+	<show_id>{vshow_id}</show_id>
+	<dealer_id>{this.vid_lab.text}</dealer_id>
+	<date_attended>{vdate_attended}</date_attended>
+	<total_guns>{vtotal_guns.text}</total_guns>
+	<long_guns>{this.vlong_guns.text}</long_guns>
+	<hand_guns>{this.vhand_guns.text}</hand_guns>
+	<rough_riders>{this.vrough_riders.text}</rough_riders>
+	<mode>{vMode}</mode>   	                            
+   </mx:request>   
+</mx:HTTPService>
+
+<mx:WebService id="lcl" showBusyCursor="true"
+            wsdl="http://www.heritagemfg.com/Services/HMI.cfc?wsdl">           
+      <mx:operation name="loadShowComboBox"
+      			 resultFormat="object"
+      			 result="fillShowComboBox_result(event);"
+                 fault="fillShowComboBox_fault(event);" >            	
+      </mx:operation> 
+      <mx:operation name="loadShowsAttended"
+                resultFormat="object"
+                result="showsAttended_result(event);"
+                fault="showsAttended_fault(event);">
+                 <mx:request xmlns="">
+                	<ID>{vid_lab.text}</ID>    
+                </mx:request> 
+                </mx:operation> 
+     <mx:operation name="updateDealerShow"
+                resultFormat="xml"
+                result="updateRecord_result(event);"
+                fault="updateRecord_fault(event);">
+                 <mx:request xmlns="">
+                 	<mode>{vMode}</mode>
+                	<record>{inventory}</record>    
+                </mx:request> 
+                </mx:operation>                                  
+    </mx:WebService>
+    
+    
+</mx:TitleWindow>

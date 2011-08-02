@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:TitleWindow xmlns:mx="http://www.adobe.com/2006/mxml" layout="absolute" width="440" height="460"
+	   x="200" y="150" creationComplete="init()" title="Group / Agency Maintenance" xmlns:ns1="com.metrobg.Components.*" close="closeWindow()">
+<mx:Script source="dealerUpdateWindow.as" />
+	 
+	<mx:Canvas width="95%" height="95%"  id="show_pnl" left="10" top="10">
+		 
+		 <ns1:VAComboBox y="62" id="cbx_Group"  width="217" left="111" close="enableButtons()"/> 
+		<mx:Label x="2" y="64.5" text="Distributor" fontWeight="bold" width="104" textAlign="right"/>
+		<mx:Label x="2" y="33" text="Dist Cust #" fontWeight="bold" width="104" textAlign="right"/>
+		<mx:HRule x="0" y="252" width="100%"/>
+		<mx:HBox width="100%" height="32" horizontalAlign="center" x="0" y="365" verticalAlign="middle">
+			<mx:Button label="Update Agency" click="saveGroup(event)" id="btn_Agency" icon="{Images.updateIcon}"/>
+		</mx:HBox>
+		<mx:DataGrid y="93" height="110" width="330" id="groupGrid" click="gridItemSelected()" horizontalCenter="0">
+			<mx:columns>
+				<mx:DataGridColumn headerText="Account" dataField="CUSTOMER_NUMBER"  width="100"/>
+				<mx:DataGridColumn headerText="Group / Distributor" dataField="GROUP_NAME"/>
+				<mx:DataGridColumn headerText="id" dataField="GROUP_ID" visible="false"/>
+				<mx:DataGridColumn headerText="id" dataField="DEALER_ID" visible="false"/>
+			</mx:columns>
+		</mx:DataGrid>  
+		<mx:Label x="0" y="264" width="100%" fontWeight="bold" textAlign="center" fontSize="12" text="Sales Rep &amp; Agency:"/>
+		<mx:Label x="0" y="4" width="100%" fontWeight="bold" textAlign="center" fontSize="12" id="lbl_Dealer_Name"/>
+		<mx:TextInput x="111" y="31" width="217" id="strCustNumber" text="0" maxChars="20"/>
+		<ns1:VAComboBox x="144" y="297" id="cbx_AGENCY" close="filterReps()"/> 
+		<ns1:VAComboBox x="144" y="325.5" id="cbx_REP" /> 
+		<mx:Label x="19" y="297.5" text="Agency " width="114" fontWeight="bold" textAlign="right"/>
+		<mx:Label x="19" y="328" text="Rep Name" width="114" fontWeight="bold" textAlign="right"/>
+		<mx:HBox width="100%" height="32" horizontalAlign="center" x="0" y="212" verticalAlign="middle">
+			<mx:Button label="Cancel" width="100" click="reset()" toolTip="Cancel changes and start over" id="cancelUpdate_btn" icon="{Images.cancelIcon}"/>
+			<mx:Button label="Delete Group" click="saveGroup(event)"  id="btn_DeleteGroup" icon="{Images.removeIcon}" enabled="false"/>
+			<mx:Button label="Add Group" click="saveGroup(event)" enabled="false" id="btn_AddGroup" icon="{Images.addIcon}"/>
+		</mx:HBox>
+	 
+	</mx:Canvas>
+
+
+<mx:HTTPService id="updateDealerStock"     
+    url="http://www.heritagemfg.com/console/flex/queries/updateDealerStock.cfm"
+    useProxy="false"  showBusyCursor="true" method="POST"
+    result="getResultOk(1,event)"
+    fault="getResultOk(999,event)">
+  <mx:request>
+   <random>{parentDocument.makeRandom()}</random> 
+   
+    
+   
+   <mode>{vMode}</mode>   	                            
+   </mx:request>   
+</mx:HTTPService> 
+ 
+
+<mx:HTTPService id="updateDealerShow"     
+    url="http://www.heritagemfg.com/console/flex/queries/updateDealerShow.cfm"
+    useProxy="false"  showBusyCursor="true" method="POST"
+    result="getResultOk(2,event)"
+    fault="getResultOk(999,event)">
+  <mx:request>
+<random>{parentDocument.makeRandom()}</random> 
+	 
+	 
+	 
+	 
+	<mode>{vMode}</mode>   	                            
+   </mx:request>   
+</mx:HTTPService>
+
+<mx:WebService id="lcl" showBusyCursor="true"
+            wsdl="http://www.heritagemfg.com/Services/HMI.cfc?wsdl">           
+      <mx:operation name="loadShowComboBox" resultFormat="object" />            	
+     
+     
+     <mx:operation name="updateDealerGroup"
+                resultFormat="xml"
+                result="updateRecord_result(event);"
+                fault="updateRecord_fault(event);">
+                 <mx:request xmlns="">
+                 	<MODE>{vMode}</MODE>
+                	<f1>{group.DEALER_ID}</f1>
+                	<f2>{group.GROUP_ID}</f2>
+                	<f3>{group.CUSTOMER_NUMBER}</f3>
+                </mx:request> 
+                </mx:operation> 
+      <mx:operation name="updateRepGroup"
+                resultFormat="xml"
+                result="updateRecord_result(event);"
+                fault="updateRecord_fault(event);">
+                 <mx:request xmlns="">
+                 	<f1>{agency.DEALER_ID}</f1>
+                	<f2>{agency.REP_ID}</f2>
+                	<f3>{agency.AGENCY_ID}</f3>
+                </mx:request> 
+                </mx:operation> 
+      <mx:operation name="loadGroupComboBox"
+      			 resultFormat="object"
+      			 result="fillGroupComboBox_result(event);"
+                 fault="fillGroupComboBox_fault(event);" >            	
+      </mx:operation> 
+       <mx:operation name="loadAgencyComboBox"
+      			 resultFormat="object"
+      			 result="fillAgencyComboBox_result(event);"
+                 fault="fillGroupComboBox_fault(event);" >            	
+      </mx:operation>
+       <mx:operation name="loadRepComboBox"
+      			 resultFormat="object"
+      			 result="fillRepComboBox_result(event);"
+                 fault="fillGroupComboBox_fault(event);" >            	
+      </mx:operation> 
+      <mx:operation name="loadGroupGrid"
+      			 resultFormat="object"
+      			 result="fillGroupGrid_result(event);"
+                 fault="fillGroupGrid_fault(event);" >            	
+      </mx:operation>  
+       <mx:operation name="loadDealerRep"
+      			 resultFormat="object"
+      			 result="dealerRep_result(event);"
+                 fault="dealerRep_fault(event);" > 
+                        	
+      </mx:operation>                                           
+    </mx:WebService>
+    
+    
+</mx:TitleWindow>

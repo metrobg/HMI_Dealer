@@ -1,0 +1,224 @@
+<mx:Module xmlns:mx="http://www.adobe.com/2006/mxml" layout="absolute" xmlns:ns1="Panels.*"
+           xmlns:ns2="com.metrobg.Components.*" creationComplete="init()" xmlns:ns3="com.ace.Input.*">
+    <mx:Script source="Test.as" />
+    <mx:WipeRight id="wr" duration="500" />
+    <mx:PhoneFormatter id="pf" formatString="(###) ###-####" />
+    <mx:WebService id="lcl" showBusyCursor="true" wsdl="http://www.heritagemfg.com/Services/HMI.cfc?wsdl">
+        <mx:operation name="loadStates" resultFormat="object" result="fillComboBox_result(event);" fault="fillComboBox_fault(event);">
+        </mx:operation>
+    </mx:WebService>
+    <mx:HTTPService id="loadDealerShow" url="http://www.heritagemfg.com/console/flex/queries/getDealerShows.cfm" useProxy="false"
+                    showBusyCursor="true" result="getResultOk(7,event)" fault="getResultOk(999,event)">
+        <mx:request>
+            <random>{this.makeRandom()}</random>
+            <id>{dealerRO.ID}</id>
+        </mx:request>
+    </mx:HTTPService>
+    <mx:ArrayCollection id="sourceList">
+        <mx:Object DATA="00" label="Select Source" />
+        <mx:Object DATA="BC" label="Bus. Card" />
+        <mx:Object DATA="IT" label="Internet" />
+        <mx:Object DATA="SH" label="Show" />
+        <mx:Object DATA="UK" label="Unknown" />
+        <mx:Object DATA="DP" label="Dist. Promo" />
+        <mx:Object DATA="WC" label="Warranty Card" />
+    </mx:ArrayCollection>
+    <mx:ArrayCollection id="stateList">
+        <mx:Object DATA="00" label="State/Province" />
+        <mx:Object DATA="99" label="Canada" />
+        <mx:Object DATA="AK" label="Alaska" />
+        <mx:Object DATA="AL" label="Alabama" />
+        <mx:Object DATA="AR" label="Arkansas" />
+        <mx:Object DATA="AZ" label="Arizona" />
+        <mx:Object DATA="CA" label="California" />
+        <mx:Object DATA="CO" label="Colorado" />
+        <mx:Object DATA="CT" label="Connecticut" />
+        <mx:Object DATA="DE" label="Delaware" />
+        <mx:Object DATA="DC" label="District of Columbia" />
+        <mx:Object DATA="FL" label="Florida" />
+        <mx:Object DATA="GA" label="Georgia" />
+        <mx:Object DATA="HI" label="Hawaii" />
+        <mx:Object DATA="IA" label="Iowa" />
+        <mx:Object DATA="ID" label="Idaho" />
+        <mx:Object DATA="IL" label="Illinois" />
+        <mx:Object DATA="IN" label="Indiana" />
+        <mx:Object DATA="KS" label="Kansas" />
+        <mx:Object DATA="KY" label="Kentucky" />
+        <mx:Object DATA="LA" label="Louisiana" />
+        <mx:Object DATA="MA" label="Massachusetts" />
+        <mx:Object DATA="MD" label="Maryland" />
+        <mx:Object DATA="ME" label="Maine" />
+        <mx:Object DATA="MI" label="Michigan" />
+        <mx:Object DATA="MN" label="Minnesota" />
+        <mx:Object DATA="MO" label="Missouri" />
+        <mx:Object DATA="MS" label="Mississippi" />
+        <mx:Object DATA="MT" label="Montana" />
+        <mx:Object DATA="NE" label="Nebraska" />
+        <mx:Object DATA="NC" label="North Carolina" />
+        <mx:Object DATA="ND" label="North Dakota" />
+        <mx:Object DATA="NH" label="New Hampshire" />
+        <mx:Object DATA="NJ" label="New Jersey" />
+        <mx:Object DATA="NM" label="New Mexico" />
+        <mx:Object DATA="NY" label="New York" />
+        <mx:Object DATA="NV" label="Nevada" />
+        <mx:Object DATA="OH" label="Ohio" />
+        <mx:Object DATA="OK" label="Oklahoma" />
+        <mx:Object DATA="OR" label="Oregon" />
+        <mx:Object DATA="PA" label="Pennsylvania" />
+        <mx:Object DATA="Puerto Rico" label="Puerto Rico" />
+        <mx:Object DATA="RI" label="Rhode Island" />
+        <mx:Object DATA="SC" label="South Carolina" />
+        <mx:Object DATA="SD" label="South Dakota" />
+        <mx:Object DATA="TN" label="Tennessee" />
+        <mx:Object DATA="TX" label="Texas" />
+        <mx:Object DATA="UT" label="Utah" />
+        <mx:Object DATA="VA" label="Virginia" />
+        <mx:Object DATA="VT" label="Vermont" />
+        <mx:Object DATA="WA" label="Washington" />
+        <mx:Object DATA="WI" label="Wisconsin" />
+        <mx:Object DATA="WV" label="West Virginia" />
+        <mx:Object DATA="WY" label="Wyoming" />
+    </mx:ArrayCollection>
+    <ns1:SuperPanel x="0" y="0" width="1070"
+                    height="700" layout="absolute" title="Dealer Maintenance"
+                    showControls="true" enableResize="false" exitFunction="parentApplication.removeModule"
+                    exitFunctionValue="{this.owner.name}" click="moveToFront();" id="superpanel1">
+        <mx:Panel width="65%" height="625" layout="absolute"
+                  title="Dealer List" horizontalAlign="left" id="dealer_pnl"
+                  defaultButton="{btn_Find}" left="10" top="10">
+            <mx:DataGrid width="100%" height="100%" id="dealerGrid"
+                         click="getDealerRecord()" x="0" y="0">
+                <mx:columns>
+                    <mx:DataGridColumn headerText="Name" dataField="NAME" width="155" />
+                    <mx:DataGridColumn headerText="Address" dataField="ADDRESS" width="100" />
+                    <mx:DataGridColumn headerText="City" dataField="CITY" width="85" />
+                    <mx:DataGridColumn headerText="Zip" dataField="ZIP" width="45" textAlign="center" />
+                    <mx:DataGridColumn headerText="Phone" dataField="PHONE" width="60"
+                                       textAlign="center" labelFunction="formatDealerPhone" />
+                    <mx:DataGridColumn headerText="State" dataField="STATE" width="45" textAlign="center" />
+                </mx:columns>
+            </mx:DataGrid>
+            <mx:ControlBar height="42" x="0" y="558">
+                <ns2:StateComboBox id="state_cb" close="lookupNameRO(event)" toolTip="Click here to load records from the selected state" tabIndex="1" />
+                <mx:Spacer width="17" height="6" />
+                <mx:Label text="Search by Name" fontWeight="bold" />
+                <mx:TextInput maxChars="45" id="search_fld" enter="enterKeyHandler(event)"
+                              tabIndex="2" click="this.search_fld.text=''" toolTip="Enter any part of the name to locate a match" />
+                <mx:Button label="Find" click="lookupNameRO(event)" id="btn_Find"
+                           icon="{Images.searchIcon}" tabIndex="3" />
+                <mx:Spacer height="2" width="10" />
+                <mx:Button label="Close" icon="{Images.closeIcon}" id="close_btn"
+                           click="{this.closeThisModule()}" tabIndex="4" toolTip="Click here to close this window"
+                           useHandCursor="true" buttonMode="true" />
+            </mx:ControlBar>
+        </mx:Panel>
+        <mx:VBox height="625" width="340" top="10"
+                 right="10" verticalScrollPolicy="off">
+            <mx:Panel width="100%" height="422" layout="absolute"
+                      title="{action}  Record" horizontalScrollPolicy="off" verticalScrollPolicy="off"
+                      id="update_pnl" status="{vid.text}" defaultButton="{btn_Save}">
+                <mx:Text id="vid" visible="false" width="52"
+                         x="0" y="312" />
+                <mx:Label x="10" y="20" text="Name"
+                          width="76" fontWeight="bold" textAlign="right" />
+                <mx:Label x="10" y="42" text="Address"
+                          width="76" fontWeight="bold" textAlign="right" />
+                <mx:Label x="10" y="67" text="City"
+                          width="76" fontWeight="bold" textAlign="right" />
+                <mx:Label x="10" y="92" text="State"
+                          width="76" fontWeight="bold" textAlign="right" />
+                <mx:Label x="10" y="119" text="Zipcode"
+                          width="76" fontWeight="bold" textAlign="right" />
+                <mx:Label x="10" y="145" text="Phone"
+                          width="76" fontWeight="bold" textAlign="right" />
+                <mx:Label x="10" y="170" text="Email"
+                          width="76" fontWeight="bold" textAlign="right" />
+                <mx:Label x="10" y="195" text="Web Addr"
+                          width="76" fontWeight="bold" textAlign="right" />
+                <mx:Label x="10" y="222" text="Contact"
+                          width="76" fontWeight="bold" textAlign="right" />
+                <mx:Label x="10" y="246" text="Source"
+                          width="76" fontWeight="bold" textAlign="right" />
+                <mx:Label x="10" y="273" text="HMI #"
+                          width="76" fontWeight="bold" textAlign="right" />
+                <mx:Label x="183" y="290" text="Expiry"
+                          width="106" fontWeight="bold" textAlign="center" />
+                <mx:Label x="19" y="290" text="FFL Number"
+                          width="156" fontWeight="bold" textAlign="center" />
+                <ns3:ValidatedTextInput x="94" y="18" width="195"
+                                        id="NAME" maxChars="50" minDataChars="1" />
+                <ns3:ValidatedTextInput x="94" y="43" width="195"
+                                        id="ADDRESS" maxChars="50" minDataChars="1" />
+                <ns3:ValidatedTextInput x="94" y="68" width="195"
+                                        id="CITY" maxChars="50" minDataChars="1" />
+                <ns3:ValidatedComboBox id="STATE" fontWeight="normal" labelField="LABEL"
+                                       badIndexes="0" dataField="DATA" x="94"
+                                       y="93" />
+                <ns3:ValidatedTextInput x="94" y="118" width="81"
+                                        id="ZIP" maxChars="5" />
+                <ns3:ValidatedTextInput x="94" y="143" width="109"
+                                        id="PHONE" formatter="_phoneFormat" dataType="number"
+                                        maxDataChars="10" />
+                <ns3:ValidatedTextInput x="94" y="168" width="195"
+                                        id="EMAIL" maxChars="50" dataType="email"
+                                        lower="true" />
+                <ns3:ValidatedTextInput x="94" y="193" width="195"
+                                        id="URL" maxChars="50" />
+                <ns3:ValidatedTextInput x="94" y="218" width="195"
+                                        id="CONTACT" maxChars="50" />
+                <ns3:ValidatedComboBox id="SOURCE" x="94" y="243"
+                                       dataField="DATA" labelField="label" fontWeight="normal"
+                                       badIndexes="0" />
+                <ns3:ValidatedTextInput x="94" y="268" width="81"
+                                        id="HMI_ID" maxDataChars="6" dataType="string" />
+                <ns3:ValidatedCheckBox x="183" y="269" label="include in Locator "
+                                       checkedValue="1" uncheckedValue="0" enabled="true"
+                                       id="LOCATOR" fontWeight="bold" />
+                <ns3:ValidatedTextInput x="19" y="309" width="156" id="FFL_NUMBER" />
+                <ns3:ValidatedDateField x="183" y="309" id="FFL_EXPIRY"
+                                        yearNavigationEnabled="true" editable="true" width="106"
+                                        textAlign="center" />
+                <mx:HBox x="0" y="337" width="320"
+                         height="32" verticalAlign="middle" horizontalAlign="center">
+                    <mx:Button label="Add" click="buttonHandler(event)" toolTip="Click here to add a new Dealer"
+                               icon="{Images.addIcon}" id="btn_Add" />
+                    <mx:Button label="Save" id="btn_Save" click="buttonHandler(event)"
+                               toolTip="Click here to save the current record" icon="{Images.saveIcon}" />
+                    <mx:Button label="Delete" id="btn_Delete" click="buttonHandler(event)" toolTip="Click here to delete the current record" />
+                    <mx:Button label="Cancel" id="btn_Cancel" click="buttonHandler(event)"
+                               toolTip="Click here to cancel changes to the current record" icon="{Images.cancelIcon}" />
+                </mx:HBox>
+                <mx:Label x="10" y="20" text="*"
+                          color="#F5200A" fontSize="12" />
+                <mx:Label x="10" y="41" text="*"
+                          color="#F5200A" fontSize="12" />
+                <mx:Label x="10" y="66" text="*"
+                          color="#F5200A" fontSize="12" />
+                <mx:Label x="10" y="91" text="*"
+                          color="#F5200A" fontSize="12" />
+                <mx:Label x="10" y="118" text="*"
+                          color="#F5200A" fontSize="12" />
+                <mx:Label x="10" y="247" text="*"
+                          color="#F5200A" fontSize="12" />
+            </mx:Panel>
+            <mx:Panel width="100%" height="200" layout="absolute"
+                      headerHeight="5" verticalScrollPolicy="off" defaultButton="{btn_Update}">
+                <mx:ComboBox x="86" y="11" id="vshow" visible="false" />
+                <mx:DataGrid width="259" height="140" id="showGrid"
+                             click="displayStock();" right="30" y="7">
+                    <mx:columns>
+                        <mx:DataGridColumn headerText="Show" dataField="location" width="150" />
+                        <mx:DataGridColumn headerText="Date" dataField="date" textAlign="center" />
+                    </mx:columns>
+                </mx:DataGrid>
+                <mx:HBox x="0" width="100%" height="32"
+                         verticalAlign="middle" horizontalAlign="center" bottom="5">
+                    <mx:Button label="Update Shows" click="showUpdateWindow(event)" id="btn_Update"
+                               icon="{Images.updateIcon}" enabled="{parentApplication.allowDealerModifications}" />
+                    <mx:Button label="Update Agency" icon="{Images.updateIcon}" id="btn_Agency" click="showUpdateWindow(event)" />
+                </mx:HBox>
+            </mx:Panel>
+            <!--  S H O W  C A N V A S-->
+        </mx:VBox>
+    </ns1:SuperPanel>
+</mx:Module>

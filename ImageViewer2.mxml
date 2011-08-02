@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:TitleWindow xmlns:mx="http://www.adobe.com/2006/mxml" layout="absolute" width="600" height="525"  
+	 creationComplete="init()" title="Repair Photo" resize="true"  close="PopUpManager.removePopUp(this);">
+	<mx:Script>
+		<![CDATA[
+			
+		import flash.system.Security;
+		import mx.collections.ArrayCollection;
+		import mx.managers.PopUpManager;
+		import mx.controls.Alert;
+		import mx.events.CloseEvent;
+		import mx.rpc.events.ResultEvent;
+		import SmoothImage;
+			
+            [Bindable]
+            public var loaderContext: LoaderContext;
+            [Bindable]
+            public var strURL:String = "http://heritagemfg.com/console/flex/data/"
+        
+            public var strImageList:String;
+			[Bindable] public var strOrder:String;
+			
+            private var mxw:Number;
+            private var mxh:Number;
+            
+            private var acImages:ArrayCollection; 
+			private var aryImage:Array;
+			
+            public function init():void
+            {
+            	repairImage.addEventListener(Event.COMPLETE,onImageComplete);
+                loaderContext = new LoaderContext();
+                loaderContext.checkPolicyFile = true;
+                aryImage = new Array();
+				acImages = new ArrayCollection();
+				aryImage = strImageList.split(",");
+				for(var i:int = 0;i < aryImage.length; i++) {
+					acImages.addItem({number: i+1, file: aryImage[i]});
+				}				 
+				dgImage.dataProvider = acImages;		 
+            }
+            
+            public function loadImage():void
+            {
+            	strURL += strOrder + "/" + dgImage.selectedItem.file
+                mxw = 500;
+                mxh = 250;
+                repairImage.source = strURL;
+               // smoothimage.source = "http://blog.vixiom.com/uploads/imagesmoothing/large.jpg"
+            }
+            
+            public function onImageComplete(e:Event):void
+            {
+                var wthMaxRatio:Number = mxw / mxh;
+                
+                // no resize needed
+                if (e.target.contentWidth <= mxw && e.target.contentHeight <= mxh)
+                {
+                    e.target.x = (mxw - e.target.contentWidth) / 2;
+                    e.target.y = (mxh - e.target.contentHeight) / 2;
+                }
+                else
+                {
+                    var wthImgRatio:Number = e.target.contentWidth / e.target.contentHeight;
+                    
+                    if (wthImgRatio > wthMaxRatio)
+                    {
+                        // will max out the width
+                        e.target.width = mxw;
+                        var imgHeight:Number = Math.round( (mxw / e.target.contentWidth) * e.target.contentHeight );
+                        var newY:Number = Math.round( (mxh - imgHeight) / 2 );
+                        e.target.x = 0;
+                        e.target.y = newY;
+                    }
+                    else
+                    {
+                        // will max out the height
+                        e.target.height = mxh;
+                        var imgWidth:Number = Math.round( (mxh / e.target.contentHeight) * e.target.contentWidth );
+                        var newX:Number = Math.round( (mxw - imgWidth) / 2 );
+                        e.target.x = newX;
+                        e.target.y = 0;
+                    }
+                }
+            }
+ 
+		private function deletePhoto():void {
+				if(dgImage.selectedIndex > -1) {
+				Alert.show("Are you sure you want to delete this photo ?","Remove Photo",Alert.YES|Alert.CANCEL, this, deleteConfirmed);
+			} else {
+				return;
+			}
+	 }
+			
+			private function deleteConfirmed(event:CloseEvent):void {
+				if (event.detail==Alert.YES) {
+					photoDelete.send();
+					} else {
+			  			Alert.show("Delete Cancelled","Cancel");			  			 
+			  }
+			}
+			private function getResultOk(r:Number,evt:Event):void {
+				if(photoDelete.lastResult.root.status == "1"){
+					acImages.removeItemAt(dgImage.selectedIndex);
+					acImages.refresh();
+					repairImage.source = null;
+				} else {
+					Alert.show("Problem deleting Image","Image Delete");
+				}
+			}
+			
+
+		]]>
+	</mx:Script>
+<mx:HTTPService id="photoDelete"     
+    url="http://www.heritagemfg.com/console/flex/queries/deletePhoto.cfm"
+    useProxy="false"  showBusyCursor="true"
+    result="getResultOk(1,event)"
+    fault="getResultOk(999,event)">
+  <mx:request>
+     <orderid>{strOrder}</orderid> 
+     <image>{dgImage.selectedItem.file}</image>         	                            
+   </mx:request>   
+</mx:HTTPService>
+	
+	<mx:HDividedBox width="100%" height="100%">
+		
+	 
+	<mx:Canvas width="55%" height="100%">
+	<mx:DataGrid y="10" height="159" left="5" right="5" id="dgImage" doubleClickEnabled="true" doubleClick="loadImage();">
+		<mx:columns>
+			<mx:DataGridColumn headerText="Photo" dataField="number" width="50"/>
+			<mx:DataGridColumn headerText="Name" dataField="file"/>
+		</mx:columns>
+	</mx:DataGrid>
+		
+	</mx:Canvas>
+	<mx:HBox width="100%" horizontalCenter="0" height="100%" paddingTop="5" horizontalAlign="center">
+	<mx:Panel title="Repair Photo" width="325" height="370">
+	<mx:Image left="5" right="5" height="100%" id="repairImage" width="100%"/>
+	</mx:Panel>		
+	</mx:HBox>
+		
+	</mx:HDividedBox>
+	<mx:ControlBar>
+		<mx:Button label="Delete Photo" click="deletePhoto()" toolTip="Delete the currently displayed Image"/>
+		<mx:Button label="Scale Image"/>
+	</mx:ControlBar>
+	
+</mx:TitleWindow>

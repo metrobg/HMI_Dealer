@@ -1,0 +1,381 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Module xmlns:mx="http://www.adobe.com/2006/mxml" layout="absolute"  xmlns:ns1="Panels.*"
+	 creationComplete="init()" xmlns:ns2="components.*">
+	 
+	 
+<mx:Script>
+	<![CDATA[
+		
+		
+		
+//  client add change delete  
+//  MaintainClients.mxml
+
+/*	
+1.1.1	6/22/2009 modified to requery the database after a successful update.
+		insetad of adding the updated record to the grid.
+		Also reset state_cb after save.
+		Added scrollToIndex after lookup
+
+*/
+
+	import mx.collections.ArrayCollection;
+	import mx.events.*;
+	import mx.controls.Alert;
+	import mx.core.Application;
+	import com.metrobg.Icons.Images;
+	import com.metrobg.Classes.NumberUtilities;
+	import mx.rpc.http.HTTPService;
+	
+	[Bindable] private var random:Number;  
+	
+	[Bindable]
+     public var myAC:ArrayCollection = new ArrayCollection;
+      
+     [Bindable]
+     public  var mode:String = 'update';     
+     private var newKey:Number;     
+     private var activeRecord:Number;
+     private var returnCode:Number;
+     private var version:String = "version 1.1.1";
+	 public var lastEditRecord:Number = 0;
+	 
+private function init():void {
+			this.moveToFront();
+			superpanel1.status = version;
+		}
+		        
+        
+private function getResultOk(r:Number,event:Event):void {
+		switch(r)
+		{
+			case 1:
+			   
+			     if(Number(customerLookup.lastResult.customerlist.recordcount) == 0) {
+			     	Alert.show("No matching records", "Sorry",Alert.OK, this, null,Images.BadIcon);
+			     } else    if(Number(customerLookup.lastResult.customerlist.recordcount) > 1) {
+			         myAC = customerLookup.lastResult.customerlist.record;
+			         resultGrid.dataProvider = myAC; 
+			   } else {
+			   		myAC.removeAll();  // clear grid before adding the record
+			   		myAC.addItem(customerLookup.lastResult.customerlist.record);
+			   	    myAC.refresh();
+			   	    resultGrid.dataProvider = myAC;			   	    			   	    
+			   }
+			   resultGrid.scrollToIndex(lastEditRecord);	
+			   
+               break;
+			case 2:			
+				returnCode = updateClient.lastResult.root.status; 
+			    if(Number(returnCode) == 2) {
+			    	Alert.show("Problem updating Record", "Error",Alert.OK, this, null,Images.WarningIcon);
+			    		    	 
+		         } 	else {
+		         	Alert.show("Record Updated", "Success",Alert.OK, this, null,Images.OKIcon);
+		         	this.state_cbx.selectedIndex = 0;
+		         	currentState = '';
+		         	updateGrid();		         	 
+		         }	 	  
+			   break;
+			case 3:
+			  returnCode = addClient.lastResult.root.status; 
+			    if(Number(returnCode) == 2) {
+			    	Alert.show("Problem adding Record", "Error",Alert.OK, this, null,Images.WarningIcon);			    				         	    			    	 
+		         } else {
+		         	 var itemObj:Object = new Object; 	
+			    	itemObj = {id:addClient.lastResult.root.id,
+			                   name:addClient.lastResult.root.record.name,
+			                   address:addClient.lastResult.root.record.address,
+			                   suite:addClient.lastResult.root.record.suite,
+			                   city:addClient.lastResult.root.record.city,
+			                   state:addClient.lastResult.root.record.state,
+			                   zipcode:addClient.lastResult.root.record.zipcode,
+			                   phone:addClient.lastResult.root.record.phone }
+			        addItemToGrid(itemObj); 
+			        Alert.show("Record Added", "Success", Alert.OK, this, null,Images.OKIcon);
+			        currentState = '';	
+			        break;
+		         } 
+		     case 4:
+		           returnCode = deleteClient.lastResult.root.status;
+			         if(Number(returnCode) == 2) {
+			         	Alert.show("Problem deleting Record", "Error", Alert.OK, this, null,Images.WarningIcon);		         
+			         } else {
+			            Alert.show("Record Deleted","Success", Alert.OK, this, null,Images.OKIcon);
+			         	removeItemFromGrid(activeRecord);
+			         	currentState = '';
+			         	break;
+		         }
+		     case 5:
+		               returnCode = recordCheck.lastResult.root.status;
+		                if(Number(returnCode) == 2) {
+		                	Alert.show("Problem checking Record", "Error", Alert.OK, this, null,Images.WarningIcon);
+		                } else {
+		                	if(Number(recordCheck.lastResult.root.record.total) == 0) {
+		                		deleteClient.send();
+		                	}  else {
+		                		Alert.show("Unable to delete the record.\nClient has " + recordCheck.lastResult.root.record.total +" repair order(s) on file", "Error", Alert.OK, this, null,Images.WarningIcon);
+		                	}
+		                }
+		                break;
+		     case 999:
+		         Alert.show("Unknown Error","Attention", Alert.OK, this, null,Images.StopIcon);
+		         break;  
+			}
+		}
+		
+private function gridItemSelected(event:ListEvent):void{
+			     activeRecord  = event.rowIndex -1;
+				 mode = 'update';
+				 delete_btn.enabled = true;	
+				 lastEditRecord = resultGrid.selectedIndex;				 									
+}  
+		 
+ 
+private function buttonHandler(value:String):void{
+	if(value == 'delete')
+	    mode = 'delete';
+	switch(mode) 
+	   {
+		case "update":
+			updateClient.send();
+			currentState = '';
+			break;
+		case 'add':
+		    addClient.send();
+		    break;
+		case 'delete':
+		     deleteCode();
+		     break;	    
+	   }	 	
+}
+
+private function alertClickHandler(event:CloseEvent):void {
+	             if (event.detail==Alert.YES) {
+	             	 recordCheck.send();                  
+                  }  
+}
+
+private function loadClickHandler(event:CloseEvent):void {
+	             if (event.detail==Alert.YES) {
+                    customerLookup.send();                   
+                  }  
+}
+
+private function findCustomer():void {
+	lastEditRecord;
+	if( search_fld.text == '') {
+		 Alert.show("Search field can not be blank","Attention", Alert.OK, this, null,Images.StopIcon);
+	} else {
+		customerLookup.send();
+	}
+}
+private function addRecord():void {
+	             name_fld.text = '';
+			     address_fld.text = '';
+			     suite_fld.text = '';
+			     city_fld.text = '';
+			     zipcode_fld.text = '';
+			     phone_fld.text = '';
+			     mode = 'add';
+			     delete_btn.enabled = false;
+}
+
+private function addItemToGrid(obj:Object):void {
+			     myAC.addItemAt(obj,0);
+			     resultGrid.dataProvider = myAC;
+			     myAC.refresh();		
+	} 	
+private function getAllClients():void {
+   Alert.show("Do you really want ot load over 1,500 Client Records ? " + 
+   		      "If so click Yes. Otherwise click No to cancel and perhaps search by name", "Show All", Alert.YES|Alert.NO, this, loadClickHandler,Images.WarningIcon);
+}	
+private function removeItemFromGrid(position:Number):void {
+			     myAC.removeItemAt(position);
+			     resultGrid.dataProvider = myAC;
+			     myAC.refresh();
+		
+	} 	
+
+ private function deleteCode():void {
+	             mode = 'delete';
+	      	     Alert.show("Delete: " + name_fld.text.toUpperCase(), "Really Delete", 3, this, alertClickHandler,Images.WarningIcon);
+}           
+                  
+ private function updateGrid():void {
+ 			this.customerLookup.send();
+		         
+	}  
+
+private function closeThisModule():void {
+	parentApplication.removeModule(this.owner.name);
+}
+private function formatPhone():void {
+	phone_fld.text = pf.format(phone_fld.text);
+}		
+private function stripIllegalChar():void {  
+	   phone_fld.text = phone_fld.text.substr(1,3) + phone_fld.text.substr(6,3) + phone_fld.text.substr(10,4);
+}   
+
+		private function moveToFront():void
+{
+   // move the Module to the front by moving it to the front-most
+   // index (which is always numChildren - 1)
+	if (this)
+		if (this.owner)
+			if (this.owner.name)
+				if (parentApplication)
+			   		parentApplication.setChildIndex(parentApplication.getChildByName(this.owner.name), 
+						parentApplication.numChildren - 1);
+}
+	]]>
+</mx:Script> 	
+
+<mx:HTTPService  id="customerLookup"
+    url="http://www.heritagemfg.com/console/flex/queries/getCustomer.cfm"
+    useProxy="false"  showBusyCursor="true"
+    result="getResultOk(1,event)">    
+    <mx:request>
+    <random>{random}</random>
+    <type>name</type>
+    <name>{search_fld.text.toUpperCase()}</name>
+    <random>{parentDocument.makeRandom()}</random> 
+    </mx:request>
+</mx:HTTPService>  
+ 
+   
+   <mx:HTTPService id="addClient"     
+    url="http://www.heritagemfg.com/console/flex/queries/updateClient.cfm"
+    useProxy="false"  showBusyCursor="true" method="POST"
+    result="getResultOk(3,event)">
+    <mx:request>
+        <random>{random}</random>
+    	<mode>{mode}</mode>
+    	<name>{name_fld.text}</name>
+    	<address>{address_fld.text}</address>
+    	<suite>{suite_fld.text}</suite>
+    	<city>{city_fld.text}</city>
+    	<state>{state_cbx.stateCode}</state>
+    	<zipcode>{zipcode_fld.text}</zipcode>
+    	<phone>{phone_fld.text}</phone>  
+    	<random>{parentDocument.makeRandom()}</random> 	 		
+    </mx:request>
+    </mx:HTTPService>
+    
+    <mx:HTTPService id="deleteClient"     
+    url="http://www.heritagemfg.com/console/flex/queries/updateClient.cfm"
+    useProxy="false"  showBusyCursor="true" method="POST"
+    result="getResultOk(4,event)"
+    fault="getResultOk(999,event)">
+    <mx:request>
+        <random>{random}</random>
+    	<mode>{mode}</mode> 
+    	<random>{parentDocument.makeRandom()}</random> 	
+    	<id>{resultGrid.selectedItem.id}</id> 	  	
+    </mx:request>
+    </mx:HTTPService>
+     
+    <mx:HTTPService id="updateClient"     
+    url="http://www.heritagemfg.com/console/flex/queries/updateClient.cfm"
+    useProxy="false"  showBusyCursor="true" method="POST"
+    result="getResultOk(2,event)"
+    fault="getResultOk(999,event)">
+    <mx:request>
+        <random>{random}</random>
+    	<mode>{mode}</mode>
+    	<id>{resultGrid.selectedItem.id}</id>  	
+    	<name>{name_fld.text}</name>
+    	<address>{address_fld.text}</address>
+    	<suite>{suite_fld.text}</suite>
+    	<city>{city_fld.text}</city>
+    	<state>{state_cbx.stateCode}</state>
+    	<zipcode>{zipcode_fld.text}</zipcode>
+    	<phone>{phone_fld.text}</phone> 
+    	<random>{parentDocument.makeRandom()}</random>  	 	
+    </mx:request>
+    </mx:HTTPService>
+    
+  <mx:HTTPService id="recordCheck"     
+    url="http://www.heritagemfg.com/console/flex/queries/recordCheck.cfm"
+    useProxy="false"  showBusyCursor="true" method="GET"
+    result="getResultOk(5,event)"
+    fault="getResultOk(999,event)">
+    <mx:request>	
+        <random>{random}</random>
+    	<id>{resultGrid.selectedItem.id}</id> 
+    	<random>{parentDocument.makeRandom()}</random> 	  	
+    </mx:request>
+    </mx:HTTPService>  
+    
+<mx:PhoneFormatter id="pf" formatString="(###) ###-####" />
+    
+<ns1:SuperPanel x="0" y="0" width="900" height="468" layout="absolute" title="Client Maintenance"
+		showControls="true" enableResize="false" exitFunction="parentApplication.removeModule" 
+		exitFunctionValue="{this.owner.name}" click="moveToFront();" id="superpanel1">						 
+  
+<mx:Panel width="55%" height="418" layout="absolute" title="Client List" id="panel1" left="10" top="10" defaultButton="{search_btn}"> 
+		<mx:DataGrid width="95%" id="resultGrid" itemClick="gridItemSelected(event);"
+								   visible="true" y="10" height="320" left="10">
+								<mx:columns>
+					<mx:DataGridColumn headerText="Name" dataField="name" width="155"/>
+					<mx:DataGridColumn headerText="Address" dataField="address" width="100"/> 
+					<mx:DataGridColumn headerText="City" dataField="city" width="100"/>
+					<mx:DataGridColumn headerText="State" dataField="state" width="35"/>
+				</mx:columns>
+
+							</mx:DataGrid>
+		<mx:ControlBar id="controlbar2" horizontalAlign="left">
+		<mx:Button x="147" y="276" label="Load" id="load_btn" click="getAllClients()"  icon="{Images.listIcon}"
+			       useHandCursor="true" buttonMode="true" toolTip="Click here to List All Models"/>
+		<mx:TextInput id="search_fld" maxChars="45"/>
+		<mx:Button label="Find" icon="{Images.searchIcon}" id="search_btn"
+			       toolTip="Click here to Search for a match" useHandCursor="true" buttonMode="true" fontWeight="bold" click="findCustomer()"/>
+		<mx:Button label="Close" id="close_btn" icon="{Images.closeIcon}" click="{this.closeThisModule()}"/>
+		</mx:ControlBar>
+	</mx:Panel>
+	
+	      <!--A D D  /  E D I T   P A N E L -->
+	<mx:Panel height="343" layout="absolute"  verticalScrollPolicy="off"
+		title="Customer Details" id="modelMaint" visible="true" horizontalScrollPolicy="off" horizontalAlign="center" top="10" right="10" width="40%" defaultButton="{save_btn}">
+			  <mx:Form x="0" y="0" width="100%" height="100%" id="custoner_form">
+			<mx:FormHeading label="Customer Information" textAlign="left"/>
+			<mx:FormItem label="Name" required="true">
+				<mx:TextInput id="name_fld" width="220" maxChars="45" text="{resultGrid.selectedItem.name}"/>
+			</mx:FormItem>
+			<mx:FormItem label="Address" required="true">
+				<mx:TextInput id="address_fld" width="220" maxChars="45" text="{resultGrid.selectedItem.address}"/>
+			</mx:FormItem>
+			<mx:FormItem label="Suite">
+				<mx:TextInput id="suite_fld" width="220" maxChars="45" text="{resultGrid.selectedItem.suite}"/>
+			</mx:FormItem>
+			<mx:FormItem label="City" required="true">
+				<mx:TextInput id="city_fld" width="220" maxChars="45" text="{resultGrid.selectedItem.city}"/>
+			</mx:FormItem>
+			<mx:FormItem label="State" horizontalAlign="left" required="true">
+				<ns2:StateComboBox id="state_cbx" setState="{resultGrid.selectedItem.state}"/>
+			</mx:FormItem>
+			<mx:FormItem label="Zipcode" required="true">
+				<mx:TextInput id="zipcode_fld" width="82" maxChars="9" text="{resultGrid.selectedItem.zipcode}"/>
+			</mx:FormItem>
+			<mx:FormItem label="Phone">
+				<mx:TextInput id="phone_fld" width="115" maxChars="14" text="{pf.format(resultGrid.selectedItem.phone)}"
+					 focusOut="formatPhone()" focusIn="stripIllegalChar()"/>
+			</mx:FormItem>
+		</mx:Form>
+			<mx:Text id="id_fld" visible="false" />
+
+			 
+       <mx:ControlBar id="controlbar1" horizontalAlign="center">
+		<mx:Button label="Save" id="save_btn" icon="{Images.saveIcon}" click="buttonHandler('save')" 
+			       toolTip="Click here to Save this Record"  useHandCursor="true" buttonMode="true" labelPlacement="right" width="68" fontSize="9" fontWeight="bold"/>
+		<mx:Button label="Add" id="add_btn" toolTip="Click here to add a new Model" click="addRecord();"
+			       useHandCursor="true" buttonMode="true" icon="{Images.addIcon}" labelPlacement="right" width="68" fontSize="9" fontWeight="bold"/>
+		<mx:Button label="Delete" id="delete_btn" icon="{Images.removeIcon}"
+			       click="buttonHandler('delete')" toolTip="Click here to Delete this Record" useHandCursor="true" buttonMode="true" labelPlacement="right" width="79" fontSize="9" fontWeight="bold"/>	
+	                
+		</mx:ControlBar>
+	</mx:Panel>  
+		   
+</ns1:SuperPanel> 
+</mx:Module>	 
+	 

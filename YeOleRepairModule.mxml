@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Module xmlns:mx="http://www.adobe.com/2006/mxml" layout="absolute"  xmlns:ns1="Panels.*"
+	 creationComplete="init()">
+	 
+	 
+<mx:Script>
+	<![CDATA[
+		
+		
+import flash.events.Event;
+import mx.controls.Alert;
+import mx.events.ItemClickEvent;
+import com.metrobg.Icons.Images;
+import com.metrobg.Classes.NumberUtilities;
+import mx.rpc.http.HTTPService;
+
+
+[Bindable] public var totalRecords:String;
+[Bindable]  public var searchType:String;
+[Bindable] private var random:Number;		
+		
+
+	private function init():void {
+				 this.moveToFront();
+	}
+			
+	private function clearSearchField():void {
+					search_fld.text = "";
+					ta1.text = "";
+				}
+	
+				
+	private function makeRandom():Number {
+		             var rn:Number;
+		             rn = NumberUtilities.getUnique();
+		             return rn; 
+	}
+	
+	private function gridItemSelected(eventObj:Event):void {	
+		       if(resultGrid.selectedIndex < 0 ) {
+		           return;
+					} else {
+					  	detailRequest.send();	
+				}			
+	}
+
+			
+	private function getResultOk(r:Number,event:Event):void {
+			if(!r){
+	     		Alert.show('Error sending data!!');     		
+	    		return;
+			}
+		if(r == 1) {
+	       resultGrid.dataProvider = lookUpRequest.lastResult.items.record;
+	       totalRecords = lookUpRequest.lastResult.items.count;
+	       mainPanel.status = "Search Results: " + totalRecords;
+	 } else {
+	     if (r == 2) {
+	    	ta1.htmlText = "";
+	 	    ta1. htmlText = detailRequest.lastResult.items.comments;
+		       } else {
+			      Alert.show("item not found","Attention");
+		       }	
+	     }
+	}		
+	
+	private function closeThisModule():void {
+		parentApplication.removeModule(this.owner.name);
+	}
+			
+	private function moveToFront():void
+	{
+	   // move the shape to the front by moving it to the front-most
+	   // index (which is always numChildren - 1)
+		if (this)
+			if (this.owner)
+				if (this.owner.name)
+					if (parentApplication)
+				   		parentApplication.setChildIndex(parentApplication.getChildByName(this.owner.name), 
+							parentApplication.numChildren - 1);
+	}
+	]]>
+</mx:Script> 
+
+<mx:HTTPService id="lookUpRequest"     
+    url="http://www.heritagemfg.com/site/repairs.cfm?"
+    useProxy="false"  showBusyCursor="true"
+    result="getResultOk(1,event)"
+    fault="getResultOk(99,event)">
+  <mx:request>
+     <from>{search_fld.text}</from> 
+     <type>{searchType}</type>
+      <random>{makeRandom()}</random>          	                            
+   </mx:request>    
+</mx:HTTPService>
+
+<mx:HTTPService id="detailRequest"     
+    url="http://www.heritagemfg.com/site/repairs.cfm?"
+    useProxy="false" showBusyCursor="true"
+    result="getResultOk(2,event)"
+    fault="getResultOk(99,event)">
+ <mx:request>
+     <from>{resultGrid.selectedItem.sn}</from>
+     <type>detail</type>
+     <repair_date>{resultGrid.selectedItem.date}</repair_date>
+      <random>{makeRandom()}</random>            	                            
+   </mx:request>  
+</mx:HTTPService> 
+
+	 
+<ns1:SuperPanel x="0" y="0" width="550" height="610" layout="absolute" title="2002-2007 Repairs"
+		showControls="true" enableResize="false" exitFunction="parentApplication.removeModule" 
+		exitFunctionValue="{this.owner.name}" click="moveToFront();" id="superpanel1">						 
+  
+  <mx:Panel width="95%" height="558" layout="absolute" id="mainPanel" title="Repair Log Inquiry"  left="10" top="10"
+  	 defaultButton="{search_btn}">
+		<mx:Label y="340" text="Repair Notes" fontSize="12" color="#000031" fontWeight="bold" width="100%" textAlign="center" x="0"/>
+		<mx:DataGrid y="35" width="95%" left="10" height="292" id="resultGrid" itemClick="gridItemSelected(event)">
+			<mx:columns>
+				<mx:DataGridColumn headerText="Serial no." dataField="sn" width="70"/>
+				<mx:DataGridColumn headerText="Date" dataField="date" width="80"/>
+				<mx:DataGridColumn headerText="Client" dataField="contact" width="150"/>
+			</mx:columns>
+		</mx:DataGrid>
+		<mx:TextArea y="362" width="95%" left="10" height="90" id="ta1"/>
+		<mx:ControlBar height="43" y="484">
+			<mx:RadioButtonGroup id="searchGroup"/>
+			<mx:RadioButton label="By Name" groupName="searchGroup" fontWeight="bold" id="name_rb" click="searchType='fuzzy'"/>
+			<mx:RadioButton label="By Serial No." groupName="searchGroup" fontWeight="bold" id="sn_rb" selected="true" click="searchType = 'master';"/>
+			<mx:TextInput id="search_fld" click="this.search_fld.text=''" width="129"/>
+			<mx:Button label="Search" click="lookUpRequest.send()" id="search_btn"/>
+			<mx:Button label="Close" id="close_btn"  click="{this.closeThisModule()}"
+			       toolTip="Click here to close this window" useHandCursor="true" buttonMode="true"  fontWeight="bold"/> 
+		</mx:ControlBar>
+	</mx:Panel>				   
+</ns1:SuperPanel> 
+</mx:Module>	 
+	 

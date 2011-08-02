@@ -1,0 +1,103 @@
+<?xml version="1.0"?>
+<mx:TitleWindow xmlns:mx="http://www.adobe.com/2006/mxml" creationComplete="doInit();" title="Photo Upload"
+	 status="version 1.4">
+    <mx:Script>
+    
+        <![CDATA[
+        
+        /*
+    8/29/2009	1.3	added ability to upload PDF and MS Word documents
+    3/13/2011   increased the filesize limit on uploaded items
+    
+    
+    
+    */
+        	import mx.modules.Module;
+        	import mx.core.SoundAsset;
+            import mx.controls.Alert;
+            import com.newmediateam.fileIO.MultiFileUpload;
+            import mx.managers.PopUpManager;
+            import flash.media.Sound;
+            import flash.media.SoundChannel;
+            import mx.controls.Button;
+            import flash.net.FileFilter;
+  
+            public var multiFileUpload:MultiFileUpload;
+            
+            // Sound to play when all files complete uploading 
+          //  [Embed(source="/assets/audio/Ding.mp3")]
+            public var soundClass:Class;
+          //  public var snd:SoundAsset = new soundClass() as SoundAsset;
+            public var sndChannel:SoundChannel;
+            public var orderID:String;
+            public var parentModule:Object;
+            
+            // Set the File Filters you wish to impose on the applicaton
+            public var imageTypes:FileFilter = new FileFilter("Images (*.jpg; *.jpeg; *.gif; *.png; *.pdf; *.doc)" ,"*.jpg; *.jpeg; *.gif; *.png; *.pdf; *.doc");
+        	
+            // Place File Filters into the Array that is passed to the MultiFileUpload instance
+            public var filesToFilter:Array = new Array(imageTypes);
+            
+            public var uploadDestination:String = "http://heritagemfg.com/console/flex/queries/upload.cfm";  // Modify this variable to match the  URL of your site
+            private var postVariables:URLVariables;
+            
+            private function doInit():void {
+                PopUpManager.centerPopUp(this); 
+                initApp();              
+            } 
+            
+            public function initApp():void{
+            	
+                PopUpManager.centerPopUp(this);
+	            postVariables = new URLVariables;
+	            postVariables.projectID = orderID;
+	             
+	                
+	            multiFileUpload = new MultiFileUpload(
+	                filesDG,
+	                browseBTN,
+	                clearButton,
+	                delButton,
+	                upload_btn,
+	                progressbar,
+	                uploadDestination,
+	                postVariables,
+	                0,
+	                filesToFilter
+	                );
+	            
+	           multiFileUpload.addEventListener(Event.COMPLETE,uploadsfinished);
+          
+           }
+            private function setOrderID():void {
+           	   postVariables.projectID = orderID;
+           	   lbl_order.text = "Loading Photo(s) for order " + orderID;
+           }
+           
+           public function uploadsfinished(event:Event):void{          
+//           		sndChannel=snd.play();
+           		
+           }
+        ]]>
+    </mx:Script>
+    <mx:Panel  width="652" height="330" layout="absolute" title="File Upload Control">
+     
+        <mx:DataGrid id="filesDG" left="0" right="0" bottom="30" top="5"/>
+        <mx:ProgressBar id="progressbar" labelPlacement="center" trackHeight="15" left="0" right="0" bottom="5" height="20"/>
+        
+    	<mx:ControlBar>   	
+	        <mx:Label width="252" id="lbl_order" fontWeight="bold" color="#F5360A"/>
+	        <mx:Spacer width="100%"/>
+	            <mx:HBox>
+	                <mx:Button label="Browse For Files" id="browseBTN"/>
+	                <mx:Button label="Upload" id="upload_btn" click="setOrderID()"/>
+	                <mx:Button label="Remove" id="delButton"/>
+	                <mx:Button label="Clear All" id="clearButton"/>
+	            </mx:HBox>
+	            
+        </mx:ControlBar>
+        
+    </mx:Panel>
+    	
+</mx:TitleWindow>
+ 

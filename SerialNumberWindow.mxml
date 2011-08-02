@@ -1,0 +1,48 @@
+<?xml version="1.0"?>
+<mx:TitleWindow xmlns:mx="http://www.adobe.com/2006/mxml" creationComplete="doInit();" 
+	  title="Add Serial Number" width="332" height="138" 
+	   close="PopUpManager.removePopUp(this);" defaultButton="{accept_btn}">
+    <mx:Script>
+        <![CDATA[
+        	import mx.core.IFlexModule;
+        	
+            import mx.managers.PopUpManager;    
+            import mx.events.CloseEvent;
+            import com.metrobg.Classes.Client;
+            
+            [Bindable]
+           public var altSerial:String;         
+           
+          
+            
+           
+           private function process():void {
+           	   if(serialno_fld.text == '') { 
+           	       return
+           	   } else {
+           	   	altSerial = serialno_fld.text;
+           	   	this.dispatchEvent(new CloseEvent("close"));
+				PopUpManager.removePopUp(this);    
+           	   }
+           	
+           }
+           
+          
+            
+            private function doInit():void {
+                PopUpManager.centerPopUp(this); 
+                serialno_fld.setFocus();             
+            }
+        ]]>
+    </mx:Script>
+    <mx:Form width="100%" height="100%">
+        <mx:FormItem label="Serial No." required="true" fontWeight="bold">
+            <mx:TextInput id="serialno_fld" maxChars="25" restrict="0-9,A-Z"/>
+        </mx:FormItem>
+    </mx:Form>
+    <mx:ControlBar horizontalAlign="center">
+        <mx:Button label="Accept" click="process()" id="accept_btn"/>
+    </mx:ControlBar>
+    	
+</mx:TitleWindow>
+ 

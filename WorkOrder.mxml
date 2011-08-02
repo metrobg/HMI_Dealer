@@ -1,0 +1,454 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Module xmlns:mx="http://www.adobe.com/2006/mxml" layout="absolute"  xmlns:ns1="Panels.*"
+	 xmlns:ns2="components.*" creationComplete="init()" xmlns:local="*">
+<mx:Script source="WorkOrder.as" />	 
+<!--<mx:Script source="WorkOrderMenuController.as" />  -->
+ 
+
+<mx:CurrencyFormatter id="cf" precision="2"/>
+<mx:NumberFormatter precision="2" id="nf"/>
+<mx:PhoneFormatter id="pf" formatString="(###) ###-####" />
+
+<mx:XML format="e4x" id="dp2">
+<root> 
+ <item label="New" enabled="true">                    		<!--dp2.item[0].@enabled -->
+    <editItem label="New Customer" enabled="false"/>  		<!--dp2.item[0].editItem[0].@enabled -->
+    <editItem label="New Estimate" enabled="true"/>   		<!--dp2.item[0].editItem[1].@enabled -->
+    <editItem label="New Order" enabled="true"/>      		<!--dp2.item[0].editItem[2].@enabled -->
+ </item>
+ <item label="Save" enabled="false">                        <!--dp2.item[1].@enabled -->
+   <editItem label="Reserved for Future" enabled="false"/>  <!--dp2.item[1].editItem[0].@enabled -->
+   <editItem label="Save Estimate" enabled="false"/>        <!--dp2.item[1].editItem[1].@enabled --> 
+   <editItem label="Save Order" enabled="false"/>           <!--dp2.item[1].editItem[2].@enabled -->
+ </item>
+
+ <item label="Print" enabled="false">                       <!--dp2.item[2].@enabled -->
+   <editItem label="Print Order" enabled="true"/>           <!--dp2.item[2].editItem[0].@enabled -->
+   <editItem label="Work Order" enabled="true"/>            <!--dp2.item[2].editItem[1].@enabled -->
+ </item>
+ <separator type="separator"/>                              
+<item label="Convert to Order" enabled="false"/>            <!--dp2.item[3].@enabled -->
+<separator type="separator"/>
+<item label="Update" enabled="true">                        <!--dp2.item[4].@enabled -->
+   <editItem label="Update Estimate" enabled="false"/>      <!--dp2.item[4].editItem[0].@enabled -->
+   <editItem label="Update Order" enabled="false"/>         <!--dp2.item[4].editItem[1].@enabled -->
+   </item>
+<separator type="separator"/>
+<item label="Reopen Order" enabled="false"/>                <!--dp2.item[5].@enabled -->
+<item label="Process Transaction" enabled="ture"/>         	<!--dp2.item[6].@enabled -->
+</root>
+</mx:XML>  
+  
+
+<mx:HTTPService  id="getCodes"
+    url="http://www.heritagemfg.com/console/flex/queries/getCodes.cfm"
+    useProxy="false"  showBusyCursor="true"
+    result="getResultOk(1,event)">  
+     <mx:request>
+    <random>{random}</random>
+    </mx:request>  
+</mx:HTTPService> 
+
+
+
+<mx:HTTPService  id="customerLookup"
+    url="http://www.heritagemfg.com/console/flex/queries/getCustomer.cfm"
+    useProxy="false"  showBusyCursor="true"
+    result="getResultOk(2,event)">    
+    <mx:request>
+    <name>{search_fld.text}</name>
+    <random>{random}</random>
+    </mx:request>
+</mx:HTTPService>  
+
+
+
+<mx:HTTPService  id="saveOrder"
+    url="http://www.heritagemfg.com/console/flex/queries/saveOrder.cfm"
+    useProxy="false"  showBusyCursor="true" method="POST"
+    result="getResultOk(3,event)">    
+    <mx:request>
+    <data>{xmlData}</data>
+    <random>{random}</random>
+    </mx:request>
+</mx:HTTPService>  
+
+
+
+<mx:HTTPService  id="orderLookup"
+    url="http://www.heritagemfg.com/console/flex/queries/getOrder.cfm"
+    useProxy="false"  showBusyCursor="true"
+    result="getResultOk(4,event)">   
+    <mx:request>
+    <orderid>{search_fld.text}</orderid>
+    <random>{random}</random>
+    </mx:request> 
+</mx:HTTPService> 
+
+
+
+<mx:HTTPService  id="singleCode"
+    url="http://www.heritagemfg.com/console/flex/queries/singleCode.cfm"
+    useProxy="false"  showBusyCursor="true"
+    result="getResultOk(5,event)">   
+    <mx:request>
+    <code>{search_fld.text}</code>
+    <random>{random}</random>
+    </mx:request> 
+</mx:HTTPService> 
+
+
+
+<mx:HTTPService  id="snLookup"
+    url="http://www.heritagemfg.com/console/flex/queries/snLookup.cfm"
+    useProxy="false"  showBusyCursor="true"
+    result="getResultOk(6,event)">   
+    <mx:request>
+    <serialno>{search_fld.text}</serialno>
+    <random>{random}</random>
+    </mx:request> 
+</mx:HTTPService> 
+
+
+
+<mx:HTTPService id="addClient"     
+    url="http://www.heritagemfg.com/console/flex/queries/updateClient.cfm"
+    useProxy="false"  showBusyCursor="true" method="POST"
+    result="getResultOk(7,event)">
+    <mx:request>
+        <random>{random}</random>
+    	<mode>Add</mode>
+    	<name>{name_fld.text}</name>
+    	<address>{address_fld.text}</address>
+    	<suite>{suite_fld.text}</suite>
+    	<city>{city_fld.text}</city>
+    	<state>{state_cbx.stateCode}</state>
+    	<zipcode>{zipcode_fld.text}</zipcode>
+    	<phone>{phone_fld.text}</phone>  	 		
+    </mx:request>
+    </mx:HTTPService>
+
+    
+
+ <mx:HTTPService  id="convertEstimate"
+    url="http://www.heritagemfg.com/console/flex/queries/convertEstimate.cfm"
+    useProxy="false"  showBusyCursor="true" method="POST"
+    result="getResultOk(8,event)">   
+    <mx:request>
+    <random>{random}</random>
+    <orderid>{ID}</orderid>
+    <data>{xmlData}</data>
+    </mx:request> 
+</mx:HTTPService> 
+
+
+
+<mx:HTTPService  id="reopenOrder"
+    url="http://www.heritagemfg.com/console/flex/queries/reopenOrder.cfm"
+    useProxy="false"  showBusyCursor="true" method="GET"
+    result="getResultOk(9,event)">    
+    <mx:request>
+    <random>{random}</random>
+    <orderid>{ID}</orderid>
+    </mx:request>
+</mx:HTTPService> 
+
+
+
+<mx:HTTPService  id="updateEstimate"
+    url="http://www.heritagemfg.com/console/flex/queries/updateEstimate.cfm"
+    useProxy="false"  showBusyCursor="true" method="POST"
+    result="getResultOk(10,event)">   
+    <mx:request>
+    <random>{random}</random>
+    <orderid>{ID}</orderid>
+    <data>{xmlData}</data>
+    </mx:request> 
+</mx:HTTPService> 
+
+
+
+<mx:HTTPService  id="getNotes"
+    url="http://www.heritagemfg.com/console/flex/queries/getNotes.cfm"
+    useProxy="false"  showBusyCursor="true" method="GET"
+    result="getResultOk(11,event)">   
+    <mx:request>
+    <random>{random}</random>
+    <orderid>{ID}</orderid>
+    </mx:request> 
+</mx:HTTPService> 
+
+ 
+
+<mx:HTTPService  id="updateNotes"
+    url="http://www.heritagemfg.com/console/flex/queries/saveNotes.cfm"
+    useProxy="false"  showBusyCursor="true" method="POST"
+    result="getResultOk(12,event)">   
+    <mx:request>
+    <random>{random}</random>
+    <orderid>{ID}</orderid>
+    <notes>{notes_ta.text}</notes>
+    </mx:request> 
+</mx:HTTPService> 
+
+
+
+
+
+<mx:states>
+	<mx:State name="History" basedOn="">
+		<mx:SetProperty target="{historyGrid}" name="visible" value="true" />  		
+	</mx:State>
+	<mx:State name="AddClient" basedOn="">
+		<mx:SetProperty target="{display_cnv}" name="visible" value="false" />
+		<mx:SetProperty target="{detailGrid}" name="visible" value="false" />
+		<mx:SetProperty target="{add_cnv}" name="visible" value="true" />
+	</mx:State>
+    </mx:states> 
+ 
+<mx:transitions>
+	<mx:Transition fromState="*" toState="History">	
+	    <mx:Parallel>
+	      <mx:WipeUp target="{historyGrid}"/>         
+	      <mx:SetPropertyAction name="visible" value="true" target="{historyGrid}"/>          
+		</mx:Parallel>  
+	</mx:Transition>    
+<mx:Transition fromState="History" toState="*">	
+	<mx:Sequence filter="hide" target="{historyGrid}">
+	   <mx:WipeRight />
+	   <mx:SetPropertyAction name="visible" value="false"/>
+	</mx:Sequence>
+</mx:Transition>   
+<mx:Transition fromState="*" toState="AddClient">	
+	    <mx:Parallel>
+	      <mx:WipeUp target="{add_cnv}"/>         
+	      <mx:SetPropertyAction name="visible" value="true" target="{add_cnv}"/>             
+		</mx:Parallel>  
+</mx:Transition>   
+<mx:Transition fromState="AddClient" toState="">	
+	<mx:Parallel>
+	  <mx:WipeLeft target="{display_cnv}"/>         
+	  <mx:SetPropertyAction name="visible" value="true" target="{display_cnv}"/>           
+	</mx:Parallel>  
+</mx:Transition>
+</mx:transitions>      
+
+
+<ns1:SuperPanel layout="absolute" title="Work Order Entry"  width="741" x="0" height="725" y="0"
+		showControls="true" enableResize="false" exitFunction="parentApplication.removeModule" exitFunctionValue="{this.owner.name}" 
+		 click="moveToFront();" id="superpanel1" horizontalScrollPolicy="off" verticalScrollPolicy="off">
+<mx:VBox height="100%" top="10" left="5" right="5">
+	
+	 
+<mx:ApplicationControlBar width="100%" x="50" height="62" dock="true" y="0" defaultButton="{findAcb_btn}">
+	<mx:Button label="Find" id="findAcb_btn" click="findCustomerOrCode()" icon="{Images.searchIcon}"
+	 toolTip="Search for Repair Codes or Customers" useHandCursor="true"/>		
+
+<mx:VBox height="100%">
+	<mx:Spacer height="1" />
+	<mx:TextInput width="158" id="search_fld" click="search_fld.text=''" 
+		 toolTip="Enter the Repair Code or Customer name you want to search for"/>
+	<mx:ComboBox id="searchHistory_cbx" width="155" close="updateSearchField();" />
+	<mx:Spacer height="1" />
+</mx:VBox>	 
+<mx:RadioButtonGroup id="searchGroup" itemClick="restrictInput(event)"/>	
+<mx:VBox height="100%">
+	<mx:Spacer height="1" />
+	<mx:RadioButton label="Customer" groupName="searchGroup" id="customer_rb" value="C" toolTip="Click here to search by Customer name" selected="false"/>
+	<mx:RadioButton label="Repair Code" groupName="searchGroup" id="repair_code_rb" value="R" selected="false" toolTip="Click here to search by Repair Code" enabled="false"/>
+	<mx:Spacer height="1" />
+</mx:VBox>
+
+<mx:VBox height="100%">
+	<mx:Spacer height="1" />
+	<mx:RadioButton label="Order" groupName="searchGroup" id="order_rb" value="O" toolTip="Click here to search by Order Number" selected="true"/>
+	<mx:RadioButton label="Serial# or Name" groupName="searchGroup" id="serialno_rb" value="S" selected="false" toolTip="Click here to search by Serial Number" enabled="true"/>
+	<mx:Spacer height="1" />
+</mx:VBox>
+
+<mx:VBox height="100%">
+	<mx:Spacer height="2" />
+	<mx:Button label="Show Codes" click="toggleGrid()" id="show_btn" toolTip="Click here to Show or Hide the Repair Codes" enabled="false" width="100"/>
+	<mx:PopUpMenuButton label="Actions" id="menu_pm" dataProvider="{dp2}" showRoot="false" labelField="@label" itemClick="menuItemSelected(event)"/>
+	<mx:Spacer height="2" />
+</mx:VBox>
+
+	<mx:Grid height="56">
+		<mx:GridRow width="100%" height="100%">
+			<mx:GridItem width="100%" height="100%">
+				  <mx:Image id="np" source="{Images.notesIcon}" click="showNotePad();" toolTip="Click to Show /Hide  Notes" buttonMode="true" 
+				  	useHandCursor="true" width="24" height="24" />
+			</mx:GridItem>
+			<mx:GridItem width="100%" height="100%">
+				<mx:Image id="upload1_ico" source="{Images.uploadIcon}" click="showUploadWindow();" toolTip="Click to upload photos" buttonMode="true" 
+				  	useHandCursor="true" width="24" height="24" enabled="true" />
+			</mx:GridItem>
+			<mx:GridItem width="100%" height="100%" verticalAlign="bottom">
+			  <mx:Image id="photo_ico" source="{Images.photoIcon}" click="showPhotos();" toolTip="Click to view photos" buttonMode="true" 
+				  	useHandCursor="true" width="24" height="24" visible="false" />
+			</mx:GridItem>
+		</mx:GridRow>
+		<mx:GridRow width="100%" height="100%">
+			<mx:GridItem width="100%" height="100%">
+				 
+			</mx:GridItem>
+			<mx:GridItem width="100%" height="100%" verticalAlign="middle">
+			
+			</mx:GridItem>
+			<mx:GridItem width="100%" height="100%">
+			</mx:GridItem>
+		</mx:GridRow>
+	</mx:Grid>
+</mx:ApplicationControlBar>		
+ 
+<mx:Panel width="100%" layout="absolute" height="601" horizontalAlign="center" x="15" y="13"  id="p1"
+	 horizontalScrollPolicy="off" verticalScrollPolicy="off" fontSize="12" title="Repair Ticket">
+
+
+	<mx:Canvas x="0" y="0" width="360" height="271" id="add_cnv" visible="false" horizontalScrollPolicy="off"
+		 verticalScrollPolicy="off">
+		<mx:Form x="13" y="-16" width="337" height="292" id="custoner_form">
+			<mx:FormHeading label="Customer Information" textAlign="left" x="111" y="6"/>
+			<mx:FormItem label="Name" required="true">
+				<mx:TextInput id="name_fld" width="220" maxChars="45"/>
+			</mx:FormItem>
+			<mx:FormItem label="Address" required="true">
+				<mx:TextInput id="address_fld" width="220" maxChars="45"/>
+			</mx:FormItem>
+			<mx:FormItem label="Suite">
+				<mx:TextInput id="suite_fld" width="220" maxChars="45"/>
+			</mx:FormItem>
+
+			<mx:FormItem label="City" required="true">
+				<mx:TextInput id="city_fld" width="220" maxChars="45"/>
+			</mx:FormItem>
+			<mx:FormItem label="State" horizontalAlign="left" required="true">
+				<ns2:StateComboBox id="state_cbx"/>
+			</mx:FormItem>
+			<mx:FormItem label="Zipcode" required="true">
+				<mx:TextInput id="zipcode_fld" width="220" maxChars="12"/>
+			</mx:FormItem>
+			<mx:FormItem label="Phone">
+				<mx:TextInput id="phone_fld" width="220" maxChars="15" restrict="0-9" focusOut="phone_fld.text = pf.format(phone_fld.text)"/>
+			</mx:FormItem>
+			<mx:FormItem>
+				<mx:Button label="Save Client" click="saveClient()" id="saveClient_btn"/>
+			</mx:FormItem>
+		</mx:Form>
+		</mx:Canvas>
+
+	<mx:Canvas x="0" y="0" width="360" height="271" id="display_cnv" label="Customer Information" visible="true">		
+				<mx:Label x="98" y="-1" text="Customer Information" fontWeight="bold"/>
+				<mx:Label x="20" y="34" id="name_lbl" text="" fontWeight="bold"/>
+				<mx:Label x="20" y="49" id="address_lbl" text="" fontWeight="bold"/>
+				<mx:Label x="20" y="64" id="suite_lbl" text="" fontWeight="bold"/>
+				<mx:Label x="20" y="79" id="city_lbl" text="" fontWeight="bold"/>
+				<mx:Label x="20" y="94" id="phone_lbl" text="" fontWeight="bold"/>			
+				<mx:TextArea x="20" y="145" height="58" width="248" id="complaint_ta" maxChars="500" wordWrap="true"  
+				fontFamily="Courier New" disabledColor="#000000" fontSize="12"/>
+				<mx:Label x="21" y="122" text="Customer Complaint"  fontWeight="bold" textAlign="left" width="248" color="#800040"/>
+	</mx:Canvas>
+
+
+	<mx:DateField x="489" y="2" id="dateIN_df" showToday="true" change="chkReceivedDate(event)" 
+		  disabledColor="#000000" fontSize="12"/>
+
+	<mx:Label x="381" y="5" text="Date In" fontWeight="bold" width="100" textAlign="right" fontSize="12"/>
+
+	<mx:ComboBox x="489" y="25" width="160" id="payment_cbx" fontSize="12"  disabledColor="#000000">
+	    <mx:ArrayCollection id="paymentAC">
+	    <mx:String>Payment Type</mx:String>
+	 	<mx:String>Dealer Check</mx:String>
+	 	<mx:String>Credit Card</mx:String>
+	 	<mx:String>Money Order</mx:String>
+	 	<mx:String>Warranty Repair</mx:String>
+	 	</mx:ArrayCollection>
+	</mx:ComboBox>
+
+
+	<ns2:ModelComboBox id="model_cbx" x="489" y="50" width="160" labelField="description"  disabledColor="#000000"/>
+
+	<mx:Label text="Model" fontWeight="bold" x="381" y="52" width="100" textAlign="right" fontSize="12"/>
+
+	<mx:TextInput x="489" y="76" id="serialno_fld" maxChars="15" restrict="0-9A-Z" width="160" fontSize="12"  disabledColor="#000000"/>
+
+	<mx:TextInput x="489" y="161" id="tracking_fld" maxChars="40"  width="160"  editable="false" fontSize="12"/>
+	<mx:TextInput x="489" y="185" id="altserialno_fld" maxChars="40"  width="160"  editable="false" fontSize="12"/>
+
+	<mx:Label text="Tracking" x="381" y="163" fontWeight="bold" width="100" textAlign="right"  fontSize="12"/>
+
+	<mx:Label text="Serial No." x="381" y="78" fontWeight="bold" width="100" textAlign="right" fontSize="12"/>
+	<mx:Label text="Alt Serial No." x="381" y="187" fontWeight="bold" width="100" textAlign="right" fontSize="12"/>
+
+	<mx:ComboBox id="shipvia_cbx" x="489" y="104" width="160" close="addShipping();" fontSize="12"  disabledColor="#000000">
+	 	<mx:ArrayCollection id="shipviaAC">
+	 	<mx:String>Select Shipping</mx:String>
+	 	<mx:String>Priority Mail</mx:String>
+	 	<mx:String>FedEx</mx:String>
+	 	<mx:String>UPS</mx:String>
+	 	</mx:ArrayCollection>
+	</mx:ComboBox>
+
+
+	<mx:Label text="Ship Via" fontWeight="bold" x="381" y="106" width="100" textAlign="right" fontSize="12"/>
+
+	<mx:DateField x="489" y="132" id="shipdate_df" showToday="true" change="chkDate(event)" fontSize="12"  disabledColor="#000000"/>
+
+	<mx:Label text="Ship Date" fontWeight="bold" x="381" y="134" width="100" textAlign="right" fontSize="12"/>
+	
+
+
+	<mx:DataGrid x="10" y="213" width="640" id="detailGrid" height="173" doubleClickEnabled="false"
+		 itemDoubleClick="removeDetailItem(event)" verticalScrollPolicy="auto" variableRowHeight="true">
+		<mx:columns>
+			<mx:DataGridColumn headerText="Code" dataField="code" width="75" editable="false"/>
+			<mx:DataGridColumn headerText="Work Performed" dataField="description" editable="false" wordWrap="true"/>
+			<mx:DataGridColumn headerText="Extension" dataField="price" width="100" textAlign="right" labelFunction="dataGridCurrencyFormat"/>
+		</mx:columns>
+	</mx:DataGrid>
+
+
+	<mx:DataGrid x="10" y="213" width="640" id="historyGrid" height="173" editable="false" 
+		visible="false" doubleClickEnabled="true" itemDoubleClick="showOrder(event)"
+		  verticalScrollPolicy="auto">
+		<mx:columns>
+		    <mx:DataGridColumn headerText="Order" dataField="id" width="55"/>
+			<mx:DataGridColumn headerText="Serial No" dataField="serialno" width="75"/>
+			<mx:DataGridColumn headerText="Model" dataField="model" width="75"/>
+			<mx:DataGridColumn headerText="Client" dataField="name" width="75"/>
+			<mx:DataGridColumn headerText="Total" dataField="total" width="75" textAlign="right" labelFunction="dataGridCurrencyFormat"/>
+		</mx:columns>
+	</mx:DataGrid>
+
+	<mx:TextArea x="10" y="413" width="282" height="71" id="comments_ta" wordWrap="true" maxChars="1000" fontSize="12"/>
+	<mx:Label x="111" y="391" text="Additional Comments" fontWeight="bold"/>
+	<mx:Label x="381" y="27" text="Payment" fontWeight="bold" textAlign="right" width="100" fontSize="12"/>
+	<mx:Label x="10" y="524" width="345" id="auth_message" fontWeight="bold" text="..." fontSize="10"/>
+	<ns1:SuperPanel x="124" y="299" width="250" height="175" id="notes_sp" title="Office Notes" visible="false" layout="absolute" backgroundAlpha="1" borderAlpha="1">
+		<mx:TextArea id="notes_ta" maxChars="1500" wordWrap="true" width="100%" height="85%"  y="10"/>
+		<mx:ControlBar horizontalAlign="center">
+			<mx:Button x="100" y="150" label="Close" icon="{Images.close2Icon}" click="notes_sp.visible = false"/>	
+			<mx:Button x="100" y="150" label="Save" icon="{Images.saveIcon}" click="saveNotes()" id="saveNotes_btn" />	
+		</mx:ControlBar>
+		</ns1:SuperPanel>
+	<mx:Label x="420" y="392" text="Subtotal" fontWeight="bold" width="100" textAlign="right"/>
+	<mx:Label x="420" y="417" text="Sales Tax" fontWeight="bold" width="100" textAlign="right"/>
+	<mx:Label x="420" y="443" text="Shipping" fontWeight="bold" width="100" textAlign="right"/>
+	<mx:Label x="420" y="470" text="Discount" fontWeight="bold" width="100" textAlign="right"/>
+	<mx:Label x="420" y="498" text="Total" fontWeight="bold" width="100" textAlign="right"/>
+	<mx:TextInput textAlign="right" id="subtotal_fld" editable="false" text="{nf.format(subTotal)}" maxChars="12" width="115" x="535" y="390"/>
+	<mx:TextInput textAlign="right" id="tax_fld" editable="false" restrict="0-9." maxChars="12" text="{nf.format(taxTotal)}" width="115" x="535" y="416"/>
+	<mx:TextInput textAlign="right" id="shipping_fld" editable="true" focusOut="calculateTotal()" maxChars="12" width="115" x="535" y="442"/>
+	<mx:TextInput textAlign="right" id="discount_fld" editable="true" focusOut="calculateTotal()" maxChars="12" width="115" x="535" y="467"/>
+	<mx:TextInput textAlign="right" id="total_fld" editable="false" text="{nf.format(repairTotal)}" maxChars="18" width="115" x="535" y="497"/>
+	<mx:Label x="595" y="530" width="55" id="lasteditby" textAlign="right"/>
+	<mx:Label x="440" y="529" width="60" id="createdby" textAlign="right"/>
+	<mx:Label x="512" y="530" text="Last Edit By"/>
+	<mx:Label x="363" y="529" text="Created By"/>
+</mx:Panel>	
+	 
+</mx:VBox>	 
+	
+</ns1:SuperPanel>	
+		
+</mx:Module>
