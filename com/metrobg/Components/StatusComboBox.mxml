@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:ComboBox xmlns:mx="http://www.adobe.com/2006/mxml" >
+<mx:Script>
+	<![CDATA[
+
+	public var dataField:String = "data";
+	
+	private var candidateValue:Object;
+	private var valueDirty:Boolean = false;
+	private var candidateDataProvider:Object;
+	private var dataProviderDirty:Boolean = false;
+	
+	[Bindable("change")]
+    [Bindable("valueCommit")]
+	[Inspectable(defaultValue="0", category="General", verbose="1")]
+	override public function get value()  : Object {
+        var item:Object = selectedItem;
+        if (item == null || typeof(item) != "object") return item;
+        return item[dataField] ? item[dataField] : item.label;
+    }
+ 
+	private function applyValue(val:Object):void {
+		if ((val != null) && (dataProvider != null)) {
+				
+			for (var i : int = 0; i < dataProvider.length; i++) {
+				if ( val == dataProvider[i][dataField] || val == dataProvider[i][labelField]) {
+					selectedIndex = i; 
+					return;
+		}	}	}
+		selectedIndex = -1;
+	}	
+
+	public function set value(val:Object)  : void {
+		candidateValue = val;
+		valueDirty = true;		
+		invalidateProperties();
+	}
+	override public function set dataProvider(value:Object):void {
+		candidateDataProvider = value;
+		dataProviderDirty = true;
+		invalidateProperties();
+	}
+	override protected function commitProperties():void {
+		super.commitProperties();
+
+		if (dataProviderDirty)	{
+			super.dataProvider = candidateDataProvider;
+			dataProviderDirty = false;
+		}
+
+		if (valueDirty) {
+			applyValue(candidateValue);
+			valueDirty = false;
+		}			
+	}		
+	
+	]]>
+</mx:Script>
+<mx:dataProvider>
+<mx:ArrayCollection id="statusAC">
+<mx:Object label="Active" data="Y" />
+<mx:Object label="Inactive" data="N" />
+</mx:ArrayCollection>
+    </mx:dataProvider>
+</mx:ComboBox>                
+  

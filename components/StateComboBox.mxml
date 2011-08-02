@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<mx:ComboBox xmlns:mx="http://www.adobe.com/2006/mxml" 
+	change="stateCode = this.selectedItem.DATA">
+<mx:Script>
+	<![CDATA[
+		 
+		[Bindable]
+		public var stateCode:String;
+		
+		public function set setState(statecode:String):void 	{
+				if(statecode != null)	{
+					for(var i:Number = 0; i < stateList.length; i++)	{
+						if( stateList[i]["DATA"] == statecode)	{
+							this.selectedIndex = i;
+							stateCode = stateList[i]["DATA"]
+						}
+					}
+					this.focusManager.hideFocus();
+				}
+				
+			}	
+	]]>
+</mx:Script>
+<mx:dataProvider>
+<mx:ArrayCollection id="stateList">	
+<mx:Object DATA="00" label="State/Province"/> 
+<mx:Object DATA="99" label="Canada"/> 	
+<mx:Object DATA="AK" label="Alaska"/>	
+<mx:Object DATA="AL" label="Alabama"/>	
+<mx:Object DATA="AR" label="Arkansas"/>	
+<mx:Object DATA="AZ" label="Arizona"/>	
+<mx:Object DATA="CA" label="California"/>	
+<mx:Object DATA="CO" label="Colorado"/>	
+<mx:Object DATA="CT" label="Connecticut"/>	
+<mx:Object DATA="DE" label="Delaware"/>	
+<mx:Object DATA="DC" label="District of Columbia"/>	
+<mx:Object DATA="FL" label="Florida"/>	
+<mx:Object DATA="GA" label="Georgia"/>	
+<mx:Object DATA="HI" label="Hawaii"/>	
+<mx:Object DATA="IA" label="Iowa"/>	
+<mx:Object DATA="ID" label="Idaho"/>	
+<mx:Object DATA="IL" label="Illinois"/>	
+<mx:Object DATA="IN" label="Indiana"/>	
+<mx:Object DATA="KS" label="Kansas"/>	
+<mx:Object DATA="KY" label="Kentucky"/>	
+<mx:Object DATA="LA" label="Louisiana"/>	
+<mx:Object DATA="MA" label="Massachusetts"/>	
+<mx:Object DATA="MD" label="Maryland"/>	
+<mx:Object DATA="ME" label="Maine"/>	
+<mx:Object DATA="MI" label="Michigan"/>	
+<mx:Object DATA="MN" label="Minnesota"/>	
+<mx:Object DATA="MO" label="Missouri"/>	
+<mx:Object DATA="MS" label="Mississippi"/>	
+<mx:Object DATA="MT" label="Montana"/>	
+<mx:Object DATA="NE" label="Nebraska"/>	
+<mx:Object DATA="NC" label="North Carolina"/>	
+<mx:Object DATA="ND" label="North Dakota"/>	
+<mx:Object DATA="NH" label="New Hampshire"/>	
+<mx:Object DATA="NJ" label="New Jersey"/>	
+<mx:Object DATA="NM" label="New Mexico"/>	
+<mx:Object DATA="NY" label="New York"/>	
+<mx:Object DATA="NV" label="Nevada"/>	
+<mx:Object DATA="OH" label="Ohio"/>	
+<mx:Object DATA="OK" label="Oklahoma"/>	
+<mx:Object DATA="OR" label="Oregon"/>	
+<mx:Object DATA="PA" label="Pennsylvania"/>	
+<mx:Object DATA="Puerto Rico" label="Puerto Rico"/>	
+<mx:Object DATA="RI" label="Rhode Island"/>	
+<mx:Object DATA="SC" label="South Carolina"/>	
+<mx:Object DATA="SD" label="South Dakota"/>	
+<mx:Object DATA="TN" label="Tennessee"/>	
+<mx:Object DATA="TX" label="Texas"/>	
+<mx:Object DATA="UT" label="Utah"/>	
+<mx:Object DATA="VA" label="Virginia"/>	
+<mx:Object DATA="VT" label="Vermont"/>	
+<mx:Object DATA="WA" label="Washington"/>	
+<mx:Object DATA="WI" label="Wisconsin"/>	
+<mx:Object DATA="WV" label="West Virginia"/>	
+<mx:Object DATA="WY" label="Wyoming"/>	
+</mx:ArrayCollection>
+</mx:dataProvider>
+</mx:ComboBox>
+
+

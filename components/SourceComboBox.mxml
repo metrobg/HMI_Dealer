@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<mx:ComboBox xmlns:mx="http://www.adobe.com/2006/mxml" 
+	change="sourceCode = this.selectedItem.data">
+<mx:Script>
+	<![CDATA[
+		 
+		[Bindable]
+		public var sourceCode:String;
+		
+		public function set setSource(value:String):void 	{
+				if(value != null)	{
+					for(var i:Number = 0; i < sourceList.length; i++)	{
+						if( sourceList[i]["label"] == value || sourceList[i]["data"] == value)	{
+							this.selectedIndex = i;
+							sourceCode = sourceList[i]["data"]
+						}
+					}
+					this.focusManager.hideFocus();
+				}
+				
+			}	
+	]]>
+</mx:Script>
+<mx:dataProvider>
+<mx:ArrayCollection id="sourceList">	
+<mx:Object data="00" label="Select Source"/> 	
+<mx:Object data="BC" label="Bus. Card"/>	
+<mx:Object data="IT" label="Internet"/>	
+<mx:Object data="SH" label="Show"/>	
+<mx:Object data="UK" label="Unknown"/>	
+<mx:Object data="DP" label="Dist. Promo"/>
+<mx:Object data="WC" label="Warranty Card"/>	
+
+</mx:ArrayCollection>
+</mx:dataProvider>
+</mx:ComboBox>
+
+

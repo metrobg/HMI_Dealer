@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:ComboBox xmlns:mx="http://www.adobe.com/2006/mxml">
+	<mx:Script>
+		<![CDATA[
+			public var dataField:String="data";
+
+			private var candidateValue:Object;
+			private var valueDirty:Boolean=false;
+			private var candidateDataProvider:Object;
+			private var dataProviderDirty:Boolean=false;
+
+			/** Default value A literal that represents the value that will replace the "value"
+			 * property when the method setDefault is executed */
+			 
+
+			 
+
+			/** Bad indexes - A comma separated list of invalid indexes. */
+			private var _badIndexes:String="";
+
+			/** Has this field passed validation */
+			private var _isValid:Boolean=true;
+
+			/** should we validate data */
+			private var _doValidateData:Boolean=true;
+
+			[Bindable("change")]
+			[Bindable("valueCommit")]
+			[Inspectable(defaultValue="0", category="General", verbose="1")]
+			override public function get value():Object
+			{
+				var item:Object=selectedItem;
+				if (item == null || typeof(item) != "object")
+					return item;
+				return item[dataField] ? item[dataField] : item.label;
+			}
+
+			private function applyValue(val:Object):void
+			{
+				if ((val != null) && (dataProvider != null))
+				{
+
+					for (var i:int=0; i < dataProvider.length; i++)
+					{
+						if (val == dataProvider[i][dataField] || val == dataProvider[i][labelField])
+						{
+							selectedIndex=i;
+							return;
+						}
+					}
+				}
+				selectedIndex=-1;
+			}
+
+			public function set value(val:Object):void
+			{
+				candidateValue=val;
+				valueDirty=true;
+				invalidateProperties();
+			}
+
+			override public function set dataProvider(value:Object):void
+			{
+				candidateDataProvider=value;
+				dataProviderDirty=true;
+				invalidateProperties();
+			}
+
+			override protected function commitProperties():void
+			{
+				super.commitProperties();
+
+				if (dataProviderDirty)
+				{
+					super.dataProvider=candidateDataProvider;
+					dataProviderDirty=false;
+				}
+
+				if (valueDirty)
+				{
+					applyValue(candidateValue);
+					valueDirty=false;
+				}
+			}
+
+			public function validateData():Boolean
+			{
+				var aryTemp:Array=_badIndexes.split(",");
+				if (_doValidateData)
+				{
+					_isValid=((aryTemp.indexOf(this.selectedIndex.toString()) == -1) && (this.selectedIndex > -1));
+					if (!_isValid)
+					{
+						this.errorString='"' + this.selectedLabel + '" is an invalid choice. ' + this.selectedLabel.toString();
+					}
+					else
+					{
+						this.errorString="";
+					}
+				}
+				return _isValid;
+			}
+
+			/**
+			 * isValid - Returns a boolean that defines whether the current value is valid.
+			 */
+
+			public function get isValid():Boolean
+			{
+				return _isValid;
+			}
+
+			/**
+			 * validateData - Method that will validate the data that has been entered.
+			 */
+
+
+			 
+			/**
+			 * getDefault - Method that will return the value of the defaultValue property.
+			 *
+			 * This method returns the defaultValue it exists to provide a consistenet api
+			 * between all "validated" components.
+			 */
+
+			 
+			public function set badIndexes( badIndexes:String ):void 
+		{
+			this._badIndexes = badIndexes;
+		}
+		
+		 
+		]]>
+	</mx:Script>
+</mx:ComboBox>
+

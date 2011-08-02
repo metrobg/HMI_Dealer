@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:ComboBox xmlns:mx="http://www.adobe.com/2006/mxml" >
+<mx:Script>
+	<![CDATA[
+
+	public var dataField:String = "data";
+	
+	private var candidateValue:Object;
+	private var valueDirty:Boolean = false;
+	private var candidateDataProvider:Object;
+	private var dataProviderDirty:Boolean = false;
+	
+	[Bindable("change")]
+    [Bindable("valueCommit")]
+	[Inspectable(defaultValue="0", category="General", verbose="1")]
+	override public function get value()  : Object {
+        var item:Object = selectedItem;
+        if (item == null || typeof(item) != "object") return item;
+        return item[dataField] ? item[dataField] : item.label;
+    }
+ 
+	private function applyValue(val:Object):void {
+		if ((val != null) && (dataProvider != null)) {
+				
+			for (var i : int = 0; i < dataProvider.length; i++) {
+				if ( val == dataProvider[i][dataField] || val == dataProvider[i][labelField]) {
+					selectedIndex = i; 
+					return;
+		}	}	}
+		selectedIndex = -1;
+	}	
+
+	public function set value(val:Object)  : void {
+		candidateValue = val;
+		valueDirty = true;		
+		invalidateProperties();
+	}
+	override public function set dataProvider(value:Object):void {
+		candidateDataProvider = value;
+		dataProviderDirty = true;
+		invalidateProperties();
+	}
+	override protected function commitProperties():void {
+		super.commitProperties();
+
+		if (dataProviderDirty)	{
+			super.dataProvider = candidateDataProvider;
+			dataProviderDirty = false;
+		}
+
+		if (valueDirty) {
+			applyValue(candidateValue);
+			valueDirty = false;
+		}			
+	}		
+	
+	]]>
+</mx:Script>
+
+<mx:dataProvider>
+<mx:ArrayCollection id="theList">	
+<mx:Object data="00" label="Select State"/> 	
+<mx:Object data="AK" label="Alaska"/>	
+<mx:Object data="AL" label="Alabama"/>	
+<mx:Object data="AR" label="Arkansas"/>	
+<mx:Object data="AZ" label="Arizona"/>	
+<mx:Object data="CA" label="California"/>	
+<mx:Object data="CO" label="Colorado"/>	
+<mx:Object data="CT" label="Connecticut"/>	
+<mx:Object data="DE" label="Delaware"/>	
+<mx:Object data="DC" label="District of Columbia"/>	
+<mx:Object data="FL" label="Florida"/>	
+<mx:Object data="GA" label="Georgia"/>	
+<mx:Object data="HI" label="Hawaii"/>	
+<mx:Object data="IA" label="Iowa"/>	
+<mx:Object data="ID" label="Idaho"/>	
+<mx:Object data="IL" label="Illinois"/>	
+<mx:Object data="IN" label="Indiana"/>	
+<mx:Object data="KS" label="Kansas"/>	
+<mx:Object data="KY" label="Kentucky"/>	
+<mx:Object data="LA" label="Louisiana"/>	
+<mx:Object data="MA" label="Massachusetts"/>	
+<mx:Object data="MD" label="Maryland"/>	
+<mx:Object data="ME" label="Maine"/>	
+<mx:Object data="MI" label="Michigan"/>	
+<mx:Object data="MN" label="Minnesota"/>	
+<mx:Object data="MO" label="Missouri"/>	
+<mx:Object data="MS" label="Mississippi"/>	
+<mx:Object data="MT" label="Montana"/>	
+<mx:Object data="NE" label="Nebraska"/>	
+<mx:Object data="NC" label="North Carolina"/>	
+<mx:Object data="ND" label="North Dakota"/>	
+<mx:Object data="NH" label="New Hampshire"/>	
+<mx:Object data="NJ" label="New Jersey"/>	
+<mx:Object data="NM" label="New Mexico"/>	
+<mx:Object data="NY" label="New York"/>	
+<mx:Object data="NV" label="Nevada"/>	
+<mx:Object data="OH" label="Ohio"/>	
+<mx:Object data="OK" label="Oklahoma"/>	
+<mx:Object data="OR" label="Oregon"/>	
+<mx:Object data="PA" label="Pennsylvania"/>	
+<mx:Object data="PR" label="Puerto Rico"/>	
+<mx:Object data="RI" label="Rhode Island"/>	
+<mx:Object data="SC" label="South Carolina"/>	
+<mx:Object data="SD" label="South Dakota"/>	
+<mx:Object data="TN" label="Tennessee"/>	
+<mx:Object data="TX" label="Texas"/>	
+<mx:Object data="UT" label="Utah"/>	
+<mx:Object data="VA" label="Virginia"/>
+<mx:Object data="VI" label="Virgin Islands"/>	
+<mx:Object data="VT" label="Vermont"/>	
+<mx:Object data="WA" label="Washington"/>	
+<mx:Object data="WI" label="Wisconsin"/>	
+<mx:Object data="WV" label="West Virginia"/>	
+<mx:Object data="WY" label="Wyoming"/>	
+<mx:Object data="AA" label="AA"/>	
+<mx:Object data="AE" label="AE"/>	
+<mx:Object data="AP" label="AP"/>
+</mx:ArrayCollection>
+</mx:dataProvider>
+</mx:ComboBox>
+
+

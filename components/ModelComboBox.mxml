@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:ComboBox xmlns:mx="http://www.adobe.com/2006/mxml" 
+	change="modelCode = this.selectedLabel" xmlns:local="*"  creationComplete="init()">
+<mx:Script>
+	<![CDATA[
+		import mx.collections.ArrayCollection;
+		import mx.rpc.http.HTTPService;
+		
+		[Bindable]
+		public var modelCode:String;
+		public var modelList:ArrayCollection;
+		
+		public function init():void {
+			loadModels.send();
+			
+		}
+		public function set setModel(model:String):void 	{
+				if(model != null)	{
+					for(var i:Number = 0; i < modelList.length; i++)	{
+						if( modelList[i]["description"] == model)	{
+							this.selectedIndex = i;
+							modelCode = modelList[i]["description"];
+						}
+					}
+					this.focusManager.hideFocus();
+				} else {
+					this.modelCode = "--Select Model--";
+				}
+				
+			}
+
+private function modelsLoaded(event:Event):void {
+	this.modelList = ArrayCollection(loadModels.lastResult.models.model);
+	this.modelList.addItemAt({id:0 , description:"--Select Model--"},0);
+	this.dataProvider = modelList;
+	
+}
+
+	]]>
+</mx:Script>
+
+<mx:HTTPService  id="loadModels"
+    url="http://www.heritagemfg.com/console/flex/queries/getModels.cfm"
+    useProxy="false"  showBusyCursor="true"
+    result="modelsLoaded(event)"> 
+    <mx:request>
+    <random>{parentDocument.random}</random>
+    </mx:request>    
+</mx:HTTPService>  
+</mx:ComboBox>
+

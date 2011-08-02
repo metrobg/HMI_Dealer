@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" width="266" height="114">
+<mx:Script>
+	<![CDATA[
+		
+		import mx.collections.ArrayCollection;
+		
+		
+		 public var sourceAC:ArrayCollection;
+		
+		
+		
+	]]>
+</mx:Script>
+	<mx:ComboBox x="84" y="15" width="160" id="show_cb" dataProvider="{parentDocument.showAC}" /> 
+	<mx:Label x="0" y="17" text="Location" fontWeight="bold" fontSize="10" width="65" textAlign="right"/>
+	<mx:ComboBox x="84" y="45" id="month_cb">
+	<mx:dataProvider>
+		<mx:ArrayCollection id="MonthList">	
+			<mx:Object data="00" label="Select Month"/> 	
+			<mx:Object data="JAN" label="Janurary"/>	
+			<mx:Object data="FEB" label="Feburary"/>	
+			<mx:Object data="MAR" label="March"/>
+			<mx:Object data="APR" label="April"/>
+			<mx:Object data="MAY" label="May"/>
+			<mx:Object data="JUN" label="June"/>
+			<mx:Object data="JUL" label="July"/>
+			<mx:Object data="AUG" label="August"/>
+			<mx:Object data="SEP" label="September"/>
+			<mx:Object data="OCT" label="October"/>
+			<mx:Object data="NOV" label="November"/>
+			<mx:Object data="DEC" label="December"/>	
+		</mx:ArrayCollection>
+</mx:dataProvider>	
+	</mx:ComboBox>
+	<mx:Label x="0" y="47" text="Month" fontWeight="bold" width="65" textAlign="right"/>
+	<mx:Button x="105" y="82" label="Colse"/>
+	
+</mx:Canvas>
