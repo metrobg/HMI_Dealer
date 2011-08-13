@@ -61,10 +61,6 @@ private function init():void
     moduleHandlerClass = new ModuleHandlerClass(this);
     reportRunnerOpen = false;
     ReportRunnerURL = "http://dbase.metrobg.com/HMI/ReportRunner";
-    //  acAgencyMain = new ArrayCollection();
-    //  acRepMain = new ArrayCollection();
-    //  acGroupMain = new ArrayCollection();
-    //loadData();
     registerClassAlias("flex.messaging.messages.RemotingMessage", RemotingMessage);
 }
 

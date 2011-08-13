@@ -54,7 +54,7 @@
 
             private var df:DateFormat = new DateFormat("d-M-Y")
 
-            private var version:String = "ver 1.2.6";
+            private var version:String = "ver 1.2.7";
 
             private var message:String;
 
@@ -185,7 +185,7 @@
                         Options.FIELD = dateField.selectedValue;
                         break;
                     case "6":
-                    case "67":
+                    case "7":
                         Options.template = "HMI/" + reportTemplate;
                         Options.FROM = df.format(fdate).toUpperCase();
                         Options.TO = df.format(tdate).toUpperCase();
