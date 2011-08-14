@@ -75,11 +75,13 @@ import mx.validators.ZipCodeValidator;
    1.7.2		07/07/2010 extended area where approval code and card # are displayed
 
    1.7.5		7/10/11 modified print order function to call new PDF formatted invoice.
+   1.7.6		8/13/2011 Added a mandatory message to the serial number window, which will get added to the workorder
+   comments area.
 
 
  */
 [Bindable]
-public var version:String = "1.7.5";
+public var version:String = "1.7.6";
 
 public var totalRecords:String;
 
