@@ -54,7 +54,7 @@
 
             private var df:DateFormat = new DateFormat("d-M-Y")
 
-            private var version:String = "ver 1.2.7";
+            private var version:String = "ver 1.2.8";
 
             private var message:String;
 
@@ -191,6 +191,16 @@
                         Options.TO = df.format(tdate).toUpperCase();
                         Options.SALESGROUP = cbxAgency.selectedItem.AGENCY_ID;
                         Options.SALESREP = cbxRep.selectedItem.DATA;
+                        if (cbxRep.selectedItem.DATA == "%")
+                        {
+                            var t:Array = new Array();
+                            for (var k:int = 0; k < acReps.length; k++)
+                            {
+                                if (acReps[k].DATA != "%")
+                                    t.push(acReps[k].DATA);
+                            }
+                            Options.SALESREP = t.toString();
+                        }
                         Options.ORDERBY = "," + getSortFields();
                         break;
                     case "99":
@@ -237,13 +247,13 @@
 
             private function loadReps():void
             {
-                if (cbxAgency.selectedIndex == 0)
-                {
-                    acReps = new ArrayCollection();
-                    acReps.addItem({ DATA: '%', LABEL: 'All' });
-                    cbxRep.dataProvider = acReps;
-                    return;
-                }
+                /* if (cbxAgency.selectedIndex == 0)
+                   {
+                   acReps = new ArrayCollection();
+                   acReps.addItem({ DATA: '%', LABEL: 'All' });
+                   cbxRep.dataProvider = acReps;
+                   return;
+                 } */
                 var csg:RemoteObject = new RemoteObject();
                 csg.destination = "ColdFusion";
                 csg.source = "com.Heritage.SALESREPGateway";
@@ -270,9 +280,9 @@
                         cbxAgency.dataField = "AGENCY_ID";
                         cbxAgency.dataProvider = acAgency;
                         acAgency.refresh();
-                        var tac:ArrayCollection = new ArrayCollection();
-                        tac.addItemAt({ DATA: '%', LABEL: 'All' }, 0);
-                        cbxRep.dataProvider = tac;
+                        acReps = new ArrayCollection();
+                        acReps.addItemAt({ DATA: '%', LABEL: 'All' }, 0);
+                        cbxRep.dataProvider = acReps;
                         cbxRep.labelField = "LABEL";
                         cbxRep.dataField = "DATA";
                         break;
