@@ -20,7 +20,7 @@
    import com.metrobg.Icons.Images;
  */
 [Bindable]
-public var version:String = "2.3.3";
+public var version:String = "2.3.4";
 import Classes.Inventory;
 import Classes.ModuleHandlerClass;
 import ascb.util.*;
