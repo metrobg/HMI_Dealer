@@ -10,10 +10,10 @@ import mx.managers.CursorManager;
 import mx.managers.HistoryManager;
 import mx.managers.IBrowserManager;
 import mx.managers.PopUpManager;
-import mx.messaging.SubscriptionInfo;
 import mx.messaging.messages.RemotingMessage;
 import mx.rpc.events.FaultEvent;
 import mx.rpc.events.ResultEvent;
+import mx.rpc.remoting.RemoteObject;
 
 private var bm:IBrowserManager;
 
@@ -62,13 +62,33 @@ private function init():void
     reportRunnerOpen = false;
     ReportRunnerURL = "http://dbase.metrobg.com/HMI/ReportRunner";
     registerClassAlias("flex.messaging.messages.RemotingMessage", RemotingMessage);
+    loadData();
 }
 
 public function loadData():void
 {
-    //  Agencygateway.getAllAgency();
-    //   Repgateway.getAllReps();
-    //  Groupgateway.getAllGroups();
+    loadAgencies();
+    loadReps();
+}
+
+private function loadAgencies():void
+{
+    var csg:RemoteObject = new RemoteObject();
+    csg.destination = "ColdFusion";
+    csg.source = "com.Heritage.AGENCYGateway";
+    csg.addEventListener("result", onServiceDataReady);
+    csg.addEventListener("fault", onServiceFault);
+    csg.getAllAgency();
+}
+
+private function loadReps():void
+{
+    var csg:RemoteObject = new RemoteObject();
+    csg.destination = "ColdFusion";
+    csg.source = "com.Heritage.SALESREPGateway";
+    csg.addEventListener("result", onServiceDataReady);
+    csg.addEventListener("fault", onServiceFault);
+    csg.getAllReps();
 }
 
 public function makeRandom():Number
@@ -208,13 +228,19 @@ public function onServiceDataReady(event:ResultEvent):void
             break;
         case "getAllReps":
             acRepMain = new ArrayCollection(act.result as Array);
-            acRepMain.refresh();
+            break;
+        case "getRepByAgency":
+            acRepMain = new ArrayCollection();
+            acRepMain = act.result;
             break;
         case "getAllAgency":
             acAgencyMain = new ArrayCollection(act.result as Array);
-            acAgencyMain.addItemAt({ AGENCY_ID: "0", AGENCY_COMPANY: "All" }, 0);
-            acAgencyMain.refresh();
-            // Repgateway.getAllReps();
+            var agencyList:Array = new Array();
+            for (var i:int = 0; i < acAgencyMain.length; i++)
+            {
+                agencyList.push(acAgencyMain[i].AGENCY_ID);
+            }
+            acAgencyMain.addItemAt({ AGENCY_ID: agencyList.toString(), AGENCY_SHORT_NAME: "All" }, 0);
             break;
         case "getAllGroups":
             acGroupMain = new ArrayCollection(act.result as Array);
