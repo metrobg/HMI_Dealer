@@ -32,15 +32,10 @@
             private function init():void
             {
                 this.moveToFront();
-                acCategory = new ArrayCollection();
-                acCategory.addItemAt({ LABEL: "Select", DATA: "00" }, 0);
-                acCategory.addItemAt({ LABEL: "Big Bore", DATA: "BB" }, 1);
-                acCategory.addItemAt({ LABEL: "Small Bore", DATA: "SB" }, 2);
-                acCategory.addItemAt({ LABEL: "Other", DATA: "OT" }, 3);
-                cbx_category.dataProvider = acCategory;
                 cbx_category.labelField = "LABEL"
                 cbx_category.dataField = "DATA";
                 cbx_category.selectedIndex = 0;
+                lcl.loadRLCategory();
             }
 
             private function getResultOk(r:Number, event:Event):void
@@ -172,16 +167,6 @@
                 Alert.show("Delete Code " + description_fld.text.toUpperCase(), "Really Delete", 3, this, alertClickHandler, Images.WarningIcon);
             }
 
-            /*  private function updateGrid():void
-               {
-               if (this.resultGrid.selectedItem !== null)
-               {
-               myAC.removeAll();
-               lcl.loadModels.send();
-               cbx_category.value = "00";
-
-               }
-             } */
             private function closeThisModule():void
             {
                 parentApplication.removeModule(this.owner.name);
@@ -189,8 +174,15 @@
 
             private function fillComboBox_result(evt:ResultEvent):void
             {
-                resultGrid.dataProvider = evt.result;
-                cbx_category.selectedIndex = 0;
+                if (evt.currentTarget.name == "loadRLCategory")
+                {
+                    cbx_category.selectedIndex = 0;
+                    cbx_category.dataProvider = evt.result;
+                }
+                else
+                {
+                    resultGrid.dataProvider = evt.result;
+                }
             }
 
             private function fillComboBox_fault(evt:FaultEvent):void
@@ -229,10 +221,9 @@
             }
         ]]>
     </mx:Script>
-    <!--<mx:Script source="ModelMaintenance.as" /> -->
     <mx:WebService id="lcl" showBusyCursor="true" wsdl="http://www.heritagemfg.com/Services/HMI.cfc?wsdl">
-        <mx:operation name="loadModels" resultFormat="object" result="fillComboBox_result(event);" fault="fillComboBox_fault(event);">
-        </mx:operation>
+        <mx:operation name="loadModels" resultFormat="object" result="fillComboBox_result(event);" fault="fillComboBox_fault(event);" />
+        <mx:operation name="loadRLCategory" resultFormat="object" result="fillComboBox_result(event);" fault="fillComboBox_fault(event)" />
     </mx:WebService>
     <mx:HTTPService id="getModels" url="http://www.heritagemfg.com/console/flex/queries/getModels.cfm" useProxy="false" showBusyCursor="true"
                     result="getResultOk(1,event)">
@@ -295,7 +286,7 @@
         <mx:Panel width="95%" height="144" layout="absolute" verticalScrollPolicy="off"
                   defaultButton="{save_btn}" title="Update Model " id="modelMaint" visible="true"
                   horizontalScrollPolicy="off" horizontalAlign="center" left="10" top="416">
-            <mx:TextInput id="description_fld" maxChars="20" text="{resultGrid.selectedItem.NAME}" width="164"
+            <mx:TextInput id="description_fld" maxChars="25" text="{resultGrid.selectedItem.NAME}" width="164"
                           y="8" horizontalCenter="0" />
             <mx:Text x="62" y="251" text="{resultGrid.selectedItem.ID}" width="10"
                      id="id_fld" visible="false" />
