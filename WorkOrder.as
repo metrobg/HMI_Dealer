@@ -77,11 +77,12 @@ import mx.validators.ZipCodeValidator;
    1.7.5		7/10/11 modified print order function to call new PDF formatted invoice.
    1.7.6		8/13/2011 Added a mandatory message to the serial number window, which will get added to the workorder
    comments area.
+   1.7.8	10/24/2011	Added the ability to delete the currently displayed work order after being prompted for the password.
 
 
  */
 [Bindable]
-public var version:String = "1.7.6";
+public var version:String = "1.7.8";
 
 public var totalRecords:String;
 
@@ -89,7 +90,7 @@ public var totalRecords:String;
 private var subTotal:Number = 0;
 
 [Bindable]
-private var random:Number = 0;
+public var random:Number = 0;
 
 [Bindable]
 public var ID:Number = 0;
@@ -152,6 +153,8 @@ public var windowOpen:Boolean = false;
 public var customerWindowOpen:Boolean = false;
 
 public var password:String = 'blowfish';
+
+public var deletepassword:String = 'chocolate';
 
 public var vmode:String = 'Normal';
 
@@ -724,6 +727,28 @@ private function validateFields():Boolean
     else
     {
         return false;
+    }
+}
+
+private function showDeletePasswordWindow():void
+{
+    passwordWindow = PasswordWindow(PopUpManager.createPopUp(this, PasswordWindow, true));
+    passwordWindow.showCloseButton = true;
+    passwordWindow.addEventListener("close", closeDeletePasswordWindow);
+    passwordWindow.title = "Enter Password to Delete Order";
+}
+
+public function closeDeletePasswordWindow(event:CloseEvent):void
+{
+    if (deletepassword == passwordWindow.password)
+    {
+        random = new Date().getUTCDate();
+        removeOrder.send();
+        PopUpManager.removePopUp(passwordWindow);
+    }
+    else
+    {
+        Alert.show("Password did not match", "Failed");
     }
 }
 
@@ -1338,6 +1363,17 @@ private function getResultOk(r:Number, event:Event):void
                 Alert.show("Notes updated", "Success", Alert.OK, this, null, Images.OKIcon);
             }
             break;
+        case 13:
+            if (Number(removeOrder.lastResult.status) == 2)
+            {
+                Alert.show("Problem deleting", "Error", 3, this, null, Images.WarningIcon);
+            }
+            else
+            {
+                Alert.show("Order / Estimate Deleted", "Success", Alert.OK, this, null, Images.OKIcon);
+                clearForm();
+            }
+            break;
     }
 }
 
@@ -1359,6 +1395,11 @@ public function showPhotos():void
 {
     //Alert.show("Photo viewing not completed yet","Sorry");
     openImageWindow();
+}
+
+public function cancelOrder():void
+{
+    showDeletePasswordWindow();
 }
 
 private function openImageWindow():void
