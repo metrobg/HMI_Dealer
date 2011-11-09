@@ -369,9 +369,9 @@
     <mx:Panel height="397" layout="absolute" title="{reportName}" left="5"
               right="5" top="10" width="100%" id="p1">
         <mx:DateField x="95.5" y="30" id="from_df" change="processDateFields(event,'from_df')"
-                      yearNavigationEnabled="true" />
+                      yearNavigationEnabled="true" minYear="2000" />
         <mx:DateField x="95.5" y="60" id="to_df" change="processDateFields(event,'to_df')"
-                      yearNavigationEnabled="true" />
+                      yearNavigationEnabled="true" minYear="2000" />
         <mx:Label x="29.5" y="32" text="From" fontWeight="bold"
                   width="58" textAlign="right" />
         <mx:Label x="52.5" y="62" text="To" fontWeight="bold"
