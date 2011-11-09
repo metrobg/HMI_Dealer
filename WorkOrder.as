@@ -82,7 +82,7 @@ import mx.validators.ZipCodeValidator;
 
  */
 [Bindable]
-public var version:String = "1.7.8";
+public var version:String = "1.7.9";
 
 public var totalRecords:String;
 
@@ -829,8 +829,11 @@ public function toggleGrid():void
 private function removeDetailItem(event:ListEvent):void
 {
     var activeRecord:Number = event.rowIndex;
-    if (detailGrid.selectedItem.code == "MISC 400")
+    if ((detailGrid.selectedItem.code == "MISC 400") || (detailGrid.selectedItem.code == "22 REPLACED REV"))
+    {
         altserialno_fld.text = '';
+        Alert.show("Please check your Additional Comments as it may contain language specific to a replaced Serial Number!", "Check comments");
+    }
     itemAC.removeItemAt(activeRecord);
     itemAC.refresh();
     calculateTotal();
