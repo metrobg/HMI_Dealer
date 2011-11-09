@@ -36,7 +36,7 @@
                     Alert.show("This item is already on the Work Order", "Unable to Add");
                     return;
                 }
-                if (theGrid.selectedItem.code == "MISC 400")
+                if ((theGrid.selectedItem.code == "MISC 400") || (theGrid.selectedItem.code == "22 REPLACED REV"))
                 {
                     openSerialNumberWindow();
                 }
@@ -102,15 +102,15 @@
                 {
                     if (event.currentTarget.altSerial.length > 3)
                     {
-                        var altSerialNumber:String = event.currentTarget.altSerial;
-                        parentModule.altserialno_fld.text = altSerialNumber; // only add the code if we have a decent string
+                        parentModule.altserialno_fld.text = event.currentTarget.altSerial; // only add the code if we have a decent string
                         if (parentModule.comments_ta.text.length > 0)
                         {
-                            parentModule.comments_ta.text += "\n" + event.currentTarget.txtSerialMessage.text;
+                            var tmpTxt:String = parentModule.comments_ta.text;
+                            parentModule.comments_ta.text = "New Serial Number: " + event.currentTarget.altSerial + "\n" + event.currentTarget.txtSerialMessage.text + "\n" + tmpTxt;
                         }
                         else
                         {
-                            parentModule.comments_ta.text = event.currentTarget.txtSerialMessage.text;
+                            parentModule.comments_ta.text = "New Serial Number: " + event.currentTarget.altSerial + "\n" + event.currentTarget.txtSerialMessage.text;
                         }
                         targetAC.addItemAt(theGrid.selectedItem, 0);
                         targetAC.refresh();
