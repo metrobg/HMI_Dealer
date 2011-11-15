@@ -52,6 +52,8 @@ public var acAgencyMain:ArrayCollection;
 
 public var acGroupMain:ArrayCollection;
 
+public var acModelsMain:ArrayCollection;
+
 //[Bindable] public var security:Number = 0;
 private function init():void
 {
@@ -60,7 +62,7 @@ private function init():void
     webService.WhoAmI();
     moduleHandlerClass = new ModuleHandlerClass(this);
     reportRunnerOpen = false;
-    ReportRunnerURL = "http://dbase.metrobg.com/HMI/ReportRunner";
+    ReportRunnerURL = "http://milo.metrobg.com/HMI/ReportRunner";
     registerClassAlias("flex.messaging.messages.RemotingMessage", RemotingMessage);
     loadData();
 }
@@ -69,6 +71,7 @@ public function loadData():void
 {
     loadAgencies();
     loadReps();
+    webService.loadModels();
 }
 
 private function loadAgencies():void
@@ -216,6 +219,16 @@ private function WhoAmI_result(evt:ResultEvent):void
 private function WhoAmI_fault(evt:FaultEvent):void
 {
     Alert.show("Unable to log you in\n Make sure you are logged into the ECart", evt.type);
+}
+
+private function loadModels_result(evt:ResultEvent):void
+{
+    acModelsMain = ArrayCollection(evt.result);
+}
+
+private function loadModels_fault(evt:FaultEvent):void
+{
+    Alert.show("Unable to load model codes", evt.type);
 }
 
 public function onServiceDataReady(event:ResultEvent):void

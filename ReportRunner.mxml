@@ -65,6 +65,10 @@
 
             public var acAgency:ArrayCollection;
 
+            public var acCaliber:ArrayCollection;
+
+            public var acModels:ArrayCollection;
+
             private function init():void
             {
                 url = parentApplication.ReportRunnerURL;
@@ -90,6 +94,21 @@
                 //cbxRep.labelField = "LABEL";
                 cbxRep.labelFunction = getRepLabel;
                 cbxRep.dataField = "REP_ID";
+                acModels = parentApplication.acModelsMain;
+                acModels.addItemAt({ CATEGORY: '%', NAME: 'All Models' }, 0);
+                cbxModels.labelField = "NAME";
+                cbxModels.dataField = "NAME";
+                cbxModels.dataProvider = acModels;
+                cbxCaliber.labelField = "LABEL";
+                cbxCaliber.dataField = "DATA";
+                acCaliber = new ArrayCollection();
+                acCaliber.addItemAt({ DATA: '%', LABEL: 'All Calibers' }, 0);
+                acCaliber.addItemAt({ DATA: 'BB', LABEL: 'Big Bore' }, 1);
+                acCaliber.addItemAt({ DATA: 'SB', LABEL: 'Small Bore' }, 2);
+                acCaliber.addItemAt({ DATA: 'OT', LABEL: 'Other' }, 3);
+                cbxCaliber.dataProvider = acCaliber;
+                cbxModels.enabled = false;
+                cbxModels.selectedIndex = 0;
             }
 
             public function getRepLabel(item:Object):String
@@ -127,6 +146,9 @@
                     case 7:
                         this[vCanvas].visible = true;
                         break;
+                    case 8:
+                        this[vCanvas].visible = true;
+                        break;
                 }
             }
 
@@ -139,6 +161,7 @@
                 Canvas5.visible = false;
                 Canvas6.visible = false;
                 Canvas7.visible = false;
+                Canvas8.visible = false;
             }
 
             private function TaxoptionChanged(event:Event):void
@@ -223,6 +246,17 @@
                         }
                         Options.ORDERBY = "," + getSortFields();
                         break;
+                    case "8":
+                        Options.template = "HMI/" + reportTemplate;
+                        Options.FROM = df.format(fdate).toUpperCase();
+                        Options.TO = df.format(tdate).toUpperCase();
+                        Options.CATEGORY = cbxCaliber.selectedItem.DATA;
+                        Options.MODELS = cbxModels.selectedItem.NAME;
+                        if (cbxModels.selectedItem.CATEGORY == "%")
+                        {
+                            Options.MODELS = '%';
+                        }
+                        break;
                     case "99":
                         Options.FROM = df.format(fdate).toUpperCase();
                         Options.TO = df.format(tdate).toUpperCase();
@@ -268,6 +302,30 @@
                 acReps.refresh();
             }
 
+            private function filterModels():void
+            {
+                if (cbxCaliber.selectedIndex == 0)
+                {
+                    cbxModels.enabled = false;
+                    return;
+                    cbxModels.selectedIndex = 0;
+                }
+                else
+                {
+                    cbxModels.enabled = true;
+                    cbxModels.selectedIndex = 0;
+                }
+                if (cbxCaliber.selectedIndex > 0)
+                {
+                    acModels.filterFunction = processModelFilter;
+                }
+                else
+                {
+                    acModels.filterFunction = null;
+                }
+                acModels.refresh();
+            }
+
             private function processFilter(item:Object):Boolean
             {
                 if ((cbxAgency.selectedItem.AGENCY_ID == item.REP_SALESGROUP) || (item.REP_SALESGROUP == "%"))
@@ -277,7 +335,18 @@
                 else
                 {
                     return false;
-                    cbxRep
+                }
+            }
+
+            private function processModelFilter(item:Object):Boolean
+            {
+                if ((cbxCaliber.selectedItem.DATA == item.CATEGORY) || (item.CATEGORY == "%"))
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
                 }
             }
 
@@ -482,6 +551,16 @@
                       fontWeight="bold" />
             <mx:Label x="0" y="2" text="Sort By" width="249"
                       textAlign="center" fontWeight="bold" />
+        </mx:Canvas>
+        <mx:Canvas height="97" id="Canvas8" visible="false" left="5"
+                   right="5" bottom="98" horizontalScrollPolicy="off">
+            <ns2:VAComboBox y="24" id="cbxCaliber" maxWidth="229" close="filterModels()"
+                            horizontalCenter="0" />
+            <ns2:VAComboBox y="68" id="cbxModels" maxWidth="229" horizontalCenter="0" />
+            <mx:Label y="50" text="Select the Model" fontWeight="bold" textAlign="center"
+                      left="10" right="10" />
+            <mx:Label x="1" y="4" text="Select Type" width="100%"
+                      fontWeight="bold" textAlign="center" />
         </mx:Canvas>
         <mx:Canvas height="142" id="Canvas99" visible="false" left="5"
                    right="5" bottom="5" horizontalScrollPolicy="off">
