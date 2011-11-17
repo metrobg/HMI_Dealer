@@ -57,7 +57,7 @@
 
             private var df:DateFormat = new DateFormat("d-M-Y")
 
-            private var version:String = "ver 1.2.9";
+            private var version:String = "ver 1.3.1";
 
             private var message:String;
 
@@ -95,10 +95,8 @@
                 cbxRep.labelFunction = getRepLabel;
                 cbxRep.dataField = "REP_ID";
                 acModels = parentApplication.acModelsMain;
-                acModels.addItemAt({ CATEGORY: '%', NAME: 'All Models' }, 0);
-                cbxModels.labelField = "NAME";
-                cbxModels.dataField = "NAME";
-                cbxModels.dataProvider = acModels;
+                lbxModels.labelField = "NAME";
+                lbxModels.dataProvider = acModels;
                 cbxCaliber.labelField = "LABEL";
                 cbxCaliber.dataField = "DATA";
                 acCaliber = new ArrayCollection();
@@ -107,8 +105,8 @@
                 acCaliber.addItemAt({ DATA: 'SB', LABEL: 'Small Bore' }, 2);
                 acCaliber.addItemAt({ DATA: 'OT', LABEL: 'Other' }, 3);
                 cbxCaliber.dataProvider = acCaliber;
-                cbxModels.enabled = false;
-                cbxModels.selectedIndex = 0;
+                lbxModels.enabled = false;
+                lbxModels.selectedIndex = 0;
             }
 
             public function getRepLabel(item:Object):String
@@ -148,6 +146,8 @@
                         break;
                     case 8:
                         this[vCanvas].visible = true;
+                        cbxCaliber.selectedIndex = 0;
+                        // acModels.filterFunction = null;
                         break;
                 }
             }
@@ -247,14 +247,34 @@
                         Options.ORDERBY = "," + getSortFields();
                         break;
                     case "8":
+                        if (cbxCaliber.selectedIndex == 0)
+                        {
+                            acModels.filterFunction = null;
+                            Options.MODELS = selectAllModels();
+                            return;
+                        }
                         Options.template = "HMI/" + reportTemplate;
                         Options.FROM = df.format(fdate).toUpperCase();
                         Options.TO = df.format(tdate).toUpperCase();
                         Options.CATEGORY = cbxCaliber.selectedItem.DATA;
-                        Options.MODELS = cbxModels.selectedItem.NAME;
-                        if (cbxModels.selectedItem.CATEGORY == "%")
+                        Options.MODELS = lbxModels.selectedItem.NAME;
+                        var t:Array = new Array();
+                        var allSelected:Boolean = false;
+                        for (var j:int = 0; j < lbxModels.selectedItems.length; j++)
                         {
-                            Options.MODELS = '%';
+                            t.push(lbxModels.selectedItems[j].ID);
+                            if (lbxModels.selectedItems[j].CATEGORY == "%")
+                            {
+                                allSelected = true;
+                            }
+                        }
+                        if (allSelected)
+                        {
+                            Options.MODELS = selectAllModels();
+                        }
+                        else
+                        {
+                            Options.MODELS = t.toString();
                         }
                         break;
                     case "99":
@@ -268,6 +288,18 @@
                         Options.TAX = TAX;
                         break;
                 }
+            }
+
+            private function selectAllModels():String
+            {
+                var t:Array = new Array();
+                var tac:ArrayCollection = lbxModels.dataProvider as ArrayCollection
+                for (var i:int = 0; i < tac.length; i++)
+                {
+                    t.push(tac[i].ID);
+                }
+                trace("model count:" + t.length);
+                return t.toString();
             }
 
             private function getSortFields():String
@@ -304,24 +336,22 @@
 
             private function filterModels():void
             {
-                if (cbxCaliber.selectedIndex == 0)
-                {
-                    cbxModels.enabled = false;
-                    return;
-                    cbxModels.selectedIndex = 0;
-                }
-                else
-                {
-                    cbxModels.enabled = true;
-                    cbxModels.selectedIndex = 0;
-                }
                 if (cbxCaliber.selectedIndex > 0)
                 {
+                    lbxModels.visible = true;
+                    lbxModels.enabled = true;
+                    lblModel.visible = true;
+                    lblModelMsg.visible = true;
                     acModels.filterFunction = processModelFilter;
                 }
                 else
                 {
                     acModels.filterFunction = null;
+                    lbxModels.visible = false;
+                    lbxModels.enabled = false;
+                    lblModel.visible = false;
+                    lblModelMsg.visible = false;
+                    Options.MODELS = selectAllModels();
                 }
                 acModels.refresh();
             }
@@ -372,7 +402,7 @@
                     var request:URLRequest = new URLRequest(url);
                     request.method = "POST";
                     request.data = Options;
-                    trace("url " + request.data.toString());
+                    trace("url " + url + "?" + request.data.toString());
                     navigateToURL(request);
                 }
                 else
@@ -552,15 +582,20 @@
             <mx:Label x="0" y="2" text="Sort By" width="249"
                       textAlign="center" fontWeight="bold" />
         </mx:Canvas>
-        <mx:Canvas height="97" id="Canvas8" visible="false" left="5"
-                   right="5" bottom="98" horizontalScrollPolicy="off">
+        <mx:Canvas height="202" id="Canvas8" visible="false" left="5"
+                   right="5" bottom="0" horizontalScrollPolicy="off">
             <ns2:VAComboBox y="24" id="cbxCaliber" maxWidth="229" close="filterModels()"
                             horizontalCenter="0" />
-            <ns2:VAComboBox y="68" id="cbxModels" maxWidth="229" horizontalCenter="0" />
             <mx:Label y="50" text="Select the Model" fontWeight="bold" textAlign="center"
-                      left="10" right="10" />
+                      left="10" right="10" id="lblModel" visible="false" />
+            <mx:Label y="170" text="CTRL + click to select multiple Models " fontWeight="bold" textAlign="center"
+                      left="10" right="10" fontSize="9" height="22"
+                      id="lblModelMsg" visible="false" />
             <mx:Label x="1" y="4" text="Select Type" width="100%"
                       fontWeight="bold" textAlign="center" />
+            <mx:List x="20" y="69" height="98" id="lbxModels"
+                     visible="false" width="219" allowMultipleSelection="true">
+            </mx:List>
         </mx:Canvas>
         <mx:Canvas height="142" id="Canvas99" visible="false" left="5"
                    right="5" bottom="5" horizontalScrollPolicy="off">

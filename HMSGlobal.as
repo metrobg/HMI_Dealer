@@ -224,6 +224,7 @@ private function WhoAmI_fault(evt:FaultEvent):void
 private function loadModels_result(evt:ResultEvent):void
 {
     acModelsMain = ArrayCollection(evt.result);
+    acModelsMain.addItemAt({ CATEGORY: '%', NAME: 'All Models', ID: 0 }, 0);
 }
 
 private function loadModels_fault(evt:FaultEvent):void
