@@ -67,7 +67,7 @@ import mx.validators.ZipCodeValidator;
    1.4.0		7/4/2009 added image viewer window to the application
 
    1.5			8/30/2009 added a new serialNumberWindow component to application. this component will prompt
-   for the replacement serial number when the user addes the code MISC 400.
+   for the replacement serial number when the user addes the code 00 REPLACED REV.
    also remove the alternate serial number when the code is removed from the detail grid.
    1.6			5/31/2010	Added the ability to track the person who created the workorder and the person
    who last edited it.
@@ -82,7 +82,7 @@ import mx.validators.ZipCodeValidator;
 
  */
 [Bindable]
-public var version:String = "1.7.9";
+public var version:String = "1.8.0";
 
 public var totalRecords:String;
 
@@ -829,7 +829,7 @@ public function toggleGrid():void
 private function removeDetailItem(event:ListEvent):void
 {
     var activeRecord:Number = event.rowIndex;
-    if ((detailGrid.selectedItem.code == "MISC 400") || (detailGrid.selectedItem.code == "22 REPLACED REV"))
+    if ((detailGrid.selectedItem.code == "MISC 400") || (detailGrid.selectedItem.code == "00 REPLACED REV"))
     {
         altserialno_fld.text = '';
         Alert.show("Please check your Additional Comments as it may contain language specific to a replaced Serial Number!", "Check comments");
