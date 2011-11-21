@@ -85,6 +85,13 @@
 
             private function gridItemSelected(event:ListEvent):void
             {
+                if (Number(resultGrid.selectedItem.id) == 218)
+                {
+                    delete_btn.enabled = false;
+                    save_btn.enabled = false
+                    return; // don't allow editing of this item.
+                }
+                save_btn.enabled = true;
                 activeRecord = event.rowIndex - 1;
                 mode = 'update';
                 delete_btn.enabled = true;
