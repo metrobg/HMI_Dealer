@@ -36,7 +36,7 @@
                     Alert.show("This item is already on the Work Order", "Unable to Add");
                     return;
                 }
-                if ((theGrid.selectedItem.code == "MISC 400") || (theGrid.selectedItem.code == "22 REPLACED REV"))
+                if ((theGrid.selectedItem.code == "MISC 400") || (theGrid.selectedItem.code == "00 REPLACED REV"))
                 {
                     openSerialNumberWindow();
                 }
