@@ -100,7 +100,7 @@
                 cbxCaliber.labelField = "LABEL";
                 cbxCaliber.dataField = "DATA";
                 acCaliber = new ArrayCollection();
-                acCaliber.addItemAt({ DATA: '%', LABEL: 'All Calibers' }, 0);
+                acCaliber.addItemAt({ DATA: "'%'", LABEL: 'All Calibers',VVALUE:"'BB','SB','OT'" }, 0);
                 acCaliber.addItemAt({ DATA: 'BB', LABEL: 'Big Bore' }, 1);
                 acCaliber.addItemAt({ DATA: 'SB', LABEL: 'Small Bore' }, 2);
                 acCaliber.addItemAt({ DATA: 'OT', LABEL: 'Other' }, 3);
@@ -247,17 +247,24 @@
                         Options.ORDERBY = "," + getSortFields();
                         break;
                     case "8":
-                        if (cbxCaliber.selectedIndex == 0)
+                        if(cbxCaliber.selectedIndex == 0)
                         {
                             acModels.filterFunction = null;
+                            Options.CATEGORY = cbxCaliber.selectedItem.VVALUE;
                             Options.MODELS = selectAllModels();
-                            return;
+                            Options.template = "HMI/" + reportTemplate;
+                            Options.FROM = df.format(fdate).toUpperCase();
+                            Options.TO = df.format(tdate).toUpperCase();
+                           return;
+                        }
+                        else
+                        {
+                            Options.CATEGORY = cbxCaliber.selectedItem.DATA;
+                            Options.MODELS = lbxModels.selectedItem.NAME;
                         }
                         Options.template = "HMI/" + reportTemplate;
                         Options.FROM = df.format(fdate).toUpperCase();
                         Options.TO = df.format(tdate).toUpperCase();
-                        Options.CATEGORY = cbxCaliber.selectedItem.DATA;
-                        Options.MODELS = lbxModels.selectedItem.NAME;
                         var t:Array = new Array();
                         var allSelected:Boolean = false;
                         for (var j:int = 0; j < lbxModels.selectedItems.length; j++)
