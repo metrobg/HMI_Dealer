@@ -78,11 +78,11 @@ import mx.validators.ZipCodeValidator;
    1.7.6		8/13/2011 Added a mandatory message to the serial number window, which will get added to the workorder
    comments area.
    1.7.8	10/24/2011	Added the ability to delete the currently displayed work order after being prompted for the password.
-
+   1.8.1   09/18/12  Extended the credit card expiration year to 10 years into the future from 7
 
  */
 [Bindable]
-public var version:String = "1.8.0";
+public var version:String = "1.8.1";
 
 public var totalRecords:String;
 
